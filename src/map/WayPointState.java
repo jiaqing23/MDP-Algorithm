@@ -1,5 +1,6 @@
 package map;
 
 public enum WayPointState {
-    isStart, isWaypoint, isObstacle, isEnd;
+    isStart, isFPW, isObstacle, isEnd, isEmpty;
 }
+//isFPW = is Fastest Path Waypoint

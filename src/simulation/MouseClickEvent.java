@@ -1,5 +1,5 @@
 package simulation;
 
-public enum MouseEvent {
-
+public enum MouseClickEvent {
+    TurnLeft, GoStraight, TurnRight,
 }

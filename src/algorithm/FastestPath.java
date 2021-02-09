@@ -1,2 +1,5 @@
-package algorithm;public class FastestPath {
+package algorithm;
+
+public class FastestPath {
+
 }

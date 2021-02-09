@@ -3,15 +3,19 @@ package simulation;
 import javax.swing.*;
 import java.awt.*;
 
+import map.WayPoint;
+import map.WayPointState;
+import utils.Position;
+
 public class GridSquare extends JPanel {
 
-    private int x, y;
+    private Position position;
+    private WayPoint wayPoint;
 
-    public GridSquare(int x, int y){
-        this.x = x;
-        this.y = y;
+    public GridSquare(Position position){
+        this.position = position;
 
-        JLabel label = new JLabel(x + ", " + y);
+        JLabel label = new JLabel(position.toString());
         label.setForeground(Color.black);
         label.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 7));
         this.setBackground(Color.white);
@@ -19,12 +23,26 @@ public class GridSquare extends JPanel {
     }
 
 
-    public void toggleBackground() {
-        if (this.getBackground().equals(Color.black)) {
+    public void toggleObstacle() {
+        if(this.wayPoint.getState() == WayPointState.isObstacle){
             this.setBackground(Color.white);
-        } else {
+            this.wayPoint.setState(WayPointState.isEmpty);
+        }
+        else{
             this.setBackground(Color.black);
+            this.wayPoint.setState(WayPointState.isObstacle);
         }
     }
 
+    public Position getPosition() {
+        return position;
+    }
+
+    public void setWayPoint(WayPoint wayPoint) {
+        this.wayPoint = wayPoint;
+    }
+
+    public WayPoint getWayPoint() {
+        return wayPoint;
+    }
 }

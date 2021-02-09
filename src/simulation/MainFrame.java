@@ -7,6 +7,9 @@ import javax.swing.*;
 
 public class MainFrame extends JFrame{
 
+    private LeftPanel leftPanel;
+    private RightPanel rightPanel;
+
     public MainFrame() {
 
         this.setTitle("MDP Group 20 Simulator");
@@ -23,16 +26,26 @@ public class MainFrame extends JFrame{
         c.weighty = 1;
         c.gridx = 0;
         c.gridy = 0;
-        this.add(new LeftPanel(), c);
+        this.leftPanel = new LeftPanel();
+        this.add(leftPanel, c);
 
         c.fill = GridBagConstraints.BOTH;
         c.weightx = 0.4;
         c.weighty = 1;
         c.gridx = 1;
         c.gridy = 0;
-        this.add(new RightPanel(), c);
+        this.rightPanel = new RightPanel();
+        this.add(rightPanel, c);
 
         this.getContentPane().setBackground(new java.awt.Color(48, 95, 114));
         this.setVisible(true);
+    }
+
+    public LeftPanel getLeftPanel() {
+        return leftPanel;
+    }
+
+    public RightPanel getRightPanel() {
+        return rightPanel;
     }
 }

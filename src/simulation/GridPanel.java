@@ -1,9 +1,16 @@
 package simulation;
 
+import map.*;
+import robot.Robot;
+import utils.Orientation;
+import utils.Position;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
+import utils.Position;
 
 public class GridPanel extends JPanel {
 
@@ -13,6 +20,8 @@ public class GridPanel extends JPanel {
     private static final int GAP = 1;
 
     private GridSquare[][] grid;
+    private Robot robot;
+    private Map map;
 
     public GridPanel(){
         this.setLayout(new FlowLayout(FlowLayout.LEFT, GAP, GAP));
@@ -26,6 +35,16 @@ public class GridPanel extends JPanel {
         this.fillGrid();
     }
 
+    public void setRobotAndMap(Robot robot, Map map){
+        this.robot = robot;
+        this.map = map;
+
+        for (int i = 0; i < ROW; i++) {
+            for (int j = 0; j < COL; j++) {
+                grid[i][j].setWayPoint(map.getMap()[i][j]);
+            }
+        }
+    }
 
     public void fillGrid() {
         grid = new GridSquare[ROW][COL];
@@ -34,7 +53,7 @@ public class GridPanel extends JPanel {
 
         for (int i = ROW - 1; i >= 0; i--) {
             for (int j = 0; j < COL; j++) {
-                grid[i][j] = new GridSquare(i, j);
+                grid[i][j] = new GridSquare(new Position(i, j));
 
                 grid[i][j].setPreferredSize(new Dimension(SQUARE_SIZE, SQUARE_SIZE));
                 grid[i][j].addMouseListener(handler);
@@ -48,9 +67,41 @@ public class GridPanel extends JPanel {
         @Override
         public void mousePressed(MouseEvent e) {
             GridSquare square = (GridSquare)e.getComponent();
-            square.toggleBackground();
+            square.toggleObstacle();
         }
     }
+
+    public void updateGrid(){
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                switch(grid[i][j].getWayPoint().getState()){
+                    case isObstacle:
+                        grid[i][j].setBackground(Color.black);
+                        break;
+                    case isEmpty:
+                        grid[i][j].setBackground(Color.white);
+                        break;
+                    case isEnd:
+                        grid[i][j].setBackground(Color.orange);
+                        break;
+                    case isFPW:
+                        break;
+                    case isStart:
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        for(int i = -1; i <= 1; i++){
+            for(int j = -1; j <= 1; j++){
+                grid[robot.getPosition().x() + i][robot.getPosition().y() + j].setBackground(Color.red);
+            }
+        }
+        grid[robot.getHeadPosition().x()][robot.getHeadPosition().y()].setBackground(Color.green);
+    }
+
 }
 
 
