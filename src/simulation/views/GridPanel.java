@@ -96,7 +96,17 @@ public class GridPanel extends JPanel {
                 grid[robot.getPosition().x() + i][robot.getPosition().y() + j].setBackground(Color.red);
             }
         }
-        grid[robot.getHeadPosition().x()][robot.getHeadPosition().y()].setBackground(Color.green);
+        grid[robot.getHeadPosition().x()][robot.getHeadPosition().y()].setBackground(Color.pink);
+    }
+
+    public void displayFastestPath(){
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                if(grid[i][j].getWayPoint().getSpecialState() == WayPointSpecialState.isFastestPath){
+                    grid[i][j].setBackground(Color.green);
+                }
+            }
+        }
     }
 
 }

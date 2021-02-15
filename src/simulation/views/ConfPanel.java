@@ -3,6 +3,7 @@ package simulation.views;
 import javax.swing.*;
 import java.awt.*;
 
+
 public class ConfPanel extends JPanel{
     public ConfPanel(){
         JTextField waypointXTextField = new JTextField("    0");

@@ -38,6 +38,8 @@ public class EventHandler {
                 addMouseListener(wrapMouseAdapter(MouseClickEvent.GetMDFString));
         gui.getMainFrame().getRightPanel().getTaskPanel().getFastestPathButton().
                 addMouseListener(wrapMouseAdapter(MouseClickEvent.RunFastestPath));
+        gui.getMainFrame().getRightPanel().getMdfPanel().getTestingButton().
+                addMouseListener(wrapMouseAdapter(MouseClickEvent.Testing));
     }
 
     private MouseAdapter wrapMouseAdapter(MouseClickEvent event) {
@@ -69,11 +71,17 @@ public class EventHandler {
                     case RunFastestPath:
                         runFastestPath(e);
                         break;
+                    case Testing:
+                        testing(e);
                     default:
                         break;
                 }
             }
         };
+    }
+
+    private void testing(MouseEvent e){
+        gui.getMainFrame().getLeftPanel().getGridPanel().updateGrid();
     }
 
     private void turnLeft(MouseEvent e){
@@ -136,9 +144,7 @@ public class EventHandler {
     }
 
     public void runFastestPath(MouseEvent e){
-        Position startPosition = gui.getRobot().getPosition();
-        FastestPath.solve(gui.getMap(), startPosition, new Position(18, 13),
-                        gui.getRobot().getOrientation(),new Orientation(0));
+        FastestPath.runFastestPath(gui, gui.getRobot(), 100);
     }
 
 

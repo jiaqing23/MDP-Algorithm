@@ -5,6 +5,7 @@ import map.WayPoint;
 import map.WayPointSpecialState;
 import map.WayPointState;
 import robot.*;
+import simulation.GUI;
 import utils.Orientation;
 import utils.Position;
 
@@ -31,6 +32,8 @@ public class FastestPath {
 
         for(int i = 0; i < ROW; i++) {
             for(int j = 0; j < COL; j++){
+                map.getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
+
                 for(int k = 0; k < 4; k++){
                     states[i][j][k] = new State(map.getMap()[i][j].getPosition(), new Orientation(k));
                     dist[i][j][k] = Integer.MAX_VALUE;
@@ -87,9 +90,9 @@ public class FastestPath {
                 if (dist[to.getPosition().x()][to.getPosition().y()][to.getOrientation().getOrientation()]
                         > currentDistance + cost) {
 
-                    if(to.getPosition().x() == 1)
-                    System.out.println(u.getPosition() + " " + u.getOrientation().getOrientation() +
-                            " "+ to.getPosition() + " " + to.getOrientation().getOrientation()+" " +edge.action);
+                   // if(to.getPosition().x() == 1)
+                   //System.out.println(u.getPosition() + " " + u.getOrientation().getOrientation() +
+                           // " "+ to.getPosition() + " " + to.getOrientation().getOrientation()+" " +edge.action);
 
                     dist[to.getPosition().x()][to.getPosition().y()][to.getOrientation().getOrientation()]
                             = currentDistance + cost;
@@ -119,9 +122,26 @@ public class FastestPath {
 
 
 
-//    public ArrayList<RobotAction> solve(Map map, Position startPosition, Position endPosition,
-//                                        Orientation startOrientation){
-//        return null;
-//    }
+    public static void runFastestPath(GUI gui, Robot robot, int executePeriod){
+        ArrayList<RobotAction> actions =  solve(gui.getMap(), robot.getPosition(), gui.getMap().GOAL,
+                                                robot.getOrientation(), new Orientation(0));
+
+        Timer fastestPathThread = new Timer();
+
+        gui.displayFastestPath();
+//
+//        fastestPathThread.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                if (!actions.isEmpty()) {
+//                    gui.getRobot().execute(actions.pop());
+//                    gui.update(_gui.getMap(), _gui.getRobot());
+//                } else {
+//                    System.out.println("Path completed.");
+//                    this.cancel();
+//                }
+//            }
+//        }, executePeriod, executePeriod);
+    }
 
 }

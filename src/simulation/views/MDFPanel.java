@@ -6,7 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MDFPanel  extends JPanel {
-    private JButton importButton, exportButton, getStringButton;
+    private JButton importButton, exportButton, getStringButton, testingButton;
 
     public MDFPanel(){
         this.setLayout (new GridLayout(1,3));
@@ -14,6 +14,7 @@ public class MDFPanel  extends JPanel {
         importButton=new JButton("Import");
         exportButton=new JButton("Export");
         getStringButton=new JButton("Get String");
+        testingButton = new JButton("Update Colour");
 
         Box box = new Box(BoxLayout.X_AXIS);
         box.add(Box.createHorizontalGlue());
@@ -30,6 +31,8 @@ public class MDFPanel  extends JPanel {
         box.add(exportButton);
         box.add(Box.createHorizontalStrut(15));
         box.add(getStringButton);
+        box.add(Box.createHorizontalStrut(15));
+        box.add(testingButton);
         box.add(Box.createHorizontalGlue());
         this.add(box);
 
@@ -46,5 +49,9 @@ public class MDFPanel  extends JPanel {
 
     public JButton getGetStringButton() {
         return getStringButton;
+    }
+
+    public JButton getTestingButton() {
+        return testingButton;
     }
 }
