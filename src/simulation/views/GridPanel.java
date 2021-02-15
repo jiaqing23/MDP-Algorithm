@@ -1,16 +1,13 @@
-package simulation;
+package simulation.views;
 
 import map.*;
 import robot.Robot;
-import utils.Orientation;
 import utils.Position;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
-import utils.Position;
 
 public class GridPanel extends JPanel {
 

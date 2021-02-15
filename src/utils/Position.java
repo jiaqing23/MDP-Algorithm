@@ -38,4 +38,5 @@ public class Position {
         y += coord.y();
     }
 
+
 }

@@ -1,5 +1,7 @@
 package simulation;
 
 public enum MouseClickEvent {
-    TurnLeft, GoStraight, TurnRight,
+    TurnLeft, MoveForward, TurnRight, MoveBackward,
+    ImportMDF, ExportMDF, GetMDFString,
+    RunFastestPath,
 }

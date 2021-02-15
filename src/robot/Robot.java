@@ -2,7 +2,6 @@ package robot;
 
 import map.Map;
 import map.WayPointState;
-import simulation.GridPanel;
 import utils.*;
 
 public class Robot {
@@ -36,6 +35,10 @@ public class Robot {
         return orientation.getHeadPosition(position);
     }
 
+    public Position getBackPosition(){
+        return orientation.getBackPosition(position);
+    }
+
     public void turnLeft(){
         orientation.turnLeft();
     }
@@ -44,17 +47,37 @@ public class Robot {
         orientation.turnRight();
     }
 
-    public void goStraight(){
+    public void moveForward(){
         Position nextPositon = getHeadPosition();
+        if(checkValidPosition(nextPositon)) position = nextPositon;
+    }
 
-        if(map.isBoundary(nextPositon))
-            return;
+    public void moveBackward(){
+        Position nextPositon = getBackPosition();
+        if(checkValidPosition(nextPositon)) position = nextPositon;
+    }
+
+    public boolean checkValidPosition(Position position){
+        if(map.isBoundary(position))
+            return false;
 
         for(int i = -1; i <= 1; i++)
             for(int j = -1; j <= 1; j++)
-                if(map.getMap()[nextPositon.x()+i][nextPositon.y()+j].getState() == WayPointState.isObstacle)
-                    return;
+                if(map.getMap()[position.x()+i][position.y()+j].getState() == WayPointState.isObstacle)
+                    return false;
 
-        position = nextPositon;
+        return true;
+    }
+
+    public static boolean checkValidPosition(Map map, Position position){
+        if(map.isBoundary(position))
+            return false;
+
+        for(int i = -1; i <= 1; i++)
+            for(int j = -1; j <= 1; j++)
+                if(map.getMap()[position.x()+i][position.y()+j].getState() == WayPointState.isObstacle)
+                    return false;
+
+        return true;
     }
 }

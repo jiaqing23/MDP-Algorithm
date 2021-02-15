@@ -1,14 +1,14 @@
-package simulation;
+package map;
 
 public class MDFString {
-   String mdfHex="";
-   String mdfBinary="";
+    String mdfHex="";
+    String mdfBinary="";
 
-   public String getMDFHex(){
+    public String getMDFHex(){
        return mdfHex;
    }
 
-   public void setMDFHex(String input){
+    public void setMDFHex(String input){
        mdfHex = input;
    }
 
@@ -31,4 +31,5 @@ public class MDFString {
         String hexStr = Integer.toString(decimal,16);
         mdfHex = hexStr;
     }
+
 }

@@ -16,12 +16,24 @@ public class Orientation {
         this.orientation = x;
     }
 
+    public int getOrientation() {
+        return orientation;
+    }
+
     public void turnLeft(){
         orientation = (orientation+3)%4;
     }
 
     public void turnRight(){
         orientation = (orientation+1)%4;
+    }
+
+    public int getLeft(){
+        return (orientation+3)%4;
+    }
+
+    public int getRight(){
+        return (orientation+1)%4;
     }
 
     public Position getHeadPosition(Position position){
@@ -34,6 +46,21 @@ public class Orientation {
                 return new Position(position.x()-1, position.y());
             case 3:
                 return new Position(position.x(), position.y()-1);
+            default:
+                return position;
+        }
+    }
+
+    public Position getBackPosition(Position position){
+        switch (orientation){
+            case 0:
+                return new Position(position.x()-1, position.y());
+            case 1:
+                return new Position(position.x(), position.y()-1);
+            case 2:
+                return new Position(position.x()+1, position.y());
+            case 3:
+                return new Position(position.x(), position.y()+1);
             default:
                 return position;
         }

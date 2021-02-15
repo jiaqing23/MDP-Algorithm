@@ -1,7 +1,6 @@
-package simulation;
+package simulation.views;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class RightPanel extends JPanel {
 

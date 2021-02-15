@@ -1,4 +1,4 @@
-package simulation;
+package simulation.views;
 
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicButtonUI;

@@ -7,7 +7,7 @@ public class Map {
 
     private static final int ROW = 20;
     private static final int COL = 15;
-
+    private MDFString mdfString;
     private WayPoint[][] map;
 
     public Map(){
@@ -17,6 +17,8 @@ public class Map {
                 map[i][j] = new WayPoint(new Position(i, j));
             }
         }
+
+        mdfString = new MDFString();
     }
 
     public WayPoint[][] getMap() {
@@ -25,5 +27,17 @@ public class Map {
 
     public boolean isBoundary(Position position){
         return (position.x() == 0 || position.x() == ROW-1 || position.y() == 0 || position.y() == COL-1);
+    }
+
+    public MDFString getMdfString() {
+        return mdfString;
+    }
+
+    public void updateMapByMDF(){
+
+    }
+
+    public void updateMDF(){
+
     }
 }

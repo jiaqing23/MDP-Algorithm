@@ -1,8 +1,7 @@
-package simulation;
+package simulation.views;
 
 import java.awt.*;
 import javax.swing.JFrame;
-import javax.swing.*;
 
 
 public class MainFrame extends JFrame{

@@ -2,8 +2,7 @@ package simulation;
 
 import map.Map;
 import robot.Robot;
-
-import javax.swing.*;
+import simulation.views.MainFrame;
 
 public class GUI{
 
