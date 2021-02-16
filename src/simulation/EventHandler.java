@@ -126,8 +126,9 @@ public class EventHandler {
     public void exportMDF(MouseEvent e) {
         try {
             FileWriter myWriter = new FileWriter("MDF.txt");
+            gui.getMap().updateMDF(); // testing
             myWriter.write(gui.getMap().getMdfString().getMDFHex());
-            myWriter.close();
+             myWriter.close();
             JOptionPane.showMessageDialog(null,"Export successfully.",
                     "Export",JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException f) {

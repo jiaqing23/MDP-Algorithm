@@ -36,9 +36,33 @@ public class Map {
 
     public void updateMapByMDF(){
 
+        String tempS =  mdfString.getMDFBinary();
+        tempS = tempS.substring(2,302);
+        int count=0;
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                if(tempS.charAt(count)=='1') {
+                    map[i][j].setState(WayPointState.isObstacle);
+                }
+                count++;
+            }
+        }
     }
 
     public void updateMDF(){
-
+        String tempMDF="11";
+        int count=0;
+        int tempNum;
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                if(map[i][j].getState()!=WayPointState.isEmpty) {
+                   tempMDF+="1";
+                }else{
+                    tempMDF+="0";
+                }
+            }
+        }
+        tempMDF+="11";
+        mdfString.setMDFBinary(tempMDF);
     }
 }
