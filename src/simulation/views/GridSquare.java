@@ -45,4 +45,5 @@ public class GridSquare extends JPanel {
     public WayPoint getWayPoint() {
         return wayPoint;
     }
+
 }

@@ -72,24 +72,28 @@ public class GridPanel extends JPanel {
         for(int i = 0; i < ROW; i++){
             for(int j = 0; j < COL; j++){
                 switch(grid[i][j].getWayPoint().getState()){
-                    case isObstacle:
-                        grid[i][j].setBackground(Color.black);
-                        break;
-                    case isEmpty:
-                        grid[i][j].setBackground(Color.white);
-                        break;
-                    case isEnd:
-                        grid[i][j].setBackground(Color.orange);
-                        break;
-                    case isFPW:
-                        break;
-                    case isStart:
-                        break;
-                    default:
-                        break;
+                    case isObstacle -> grid[i][j].setBackground(Color.black);
+                    case isEmpty -> grid[i][j].setBackground(Color.white);
                 }
             }
         }
+
+        for(int i = -1; i <= 1; i++){
+            for(int j = -1; j <= 1; j++){
+                grid[map.getStart().x() + i][map.getStart().y() + j].setBackground(Color.LIGHT_GRAY);
+                grid[map.getGoal().x() + i][map.getGoal().y() + j].setBackground(Color.LIGHT_GRAY);
+            }
+        }
+
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                switch (grid[i][j].getWayPoint().getSpecialState()){
+                    case isFastestPath -> grid[i][j].setBackground(Color.green);
+                }
+            }
+        }
+        grid[map.getFPW().x()][map.getFPW().y()].setBackground(Color.YELLOW);
+
 
         for(int i = -1; i <= 1; i++){
             for(int j = -1; j <= 1; j++){
@@ -97,18 +101,8 @@ public class GridPanel extends JPanel {
             }
         }
         grid[robot.getHeadPosition().x()][robot.getHeadPosition().y()].setBackground(Color.pink);
-    }
 
-    public void displayFastestPath(){
-        for(int i = 0; i < ROW; i++){
-            for(int j = 0; j < COL; j++){
-                if(grid[i][j].getWayPoint().getSpecialState() == WayPointSpecialState.isFastestPath){
-                    grid[i][j].setBackground(Color.green);
-                }
-            }
-        }
     }
-
 }
 
 

@@ -21,7 +21,7 @@ public class RPIConnection {
         dout.flush();
     }
 
-    public  void receiveData() throws IOException {
+    public void receiveData() throws IOException {
         incomingData = din.readUTF();
     }
 }

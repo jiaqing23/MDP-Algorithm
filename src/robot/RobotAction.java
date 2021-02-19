@@ -1,5 +1,5 @@
 package robot;
 
 public enum RobotAction {
-    MoveForward, MoveBackward, RotateLeft, RotateRight;
+    MoveForward, MoveBackward, TurnLeft, TurnRight;
 }

@@ -36,8 +36,5 @@ public class GUI{
         return map;
     }
 
-    public void displayFastestPath(){
-        this.mainFrame.getLeftPanel().getGridPanel().displayFastestPath();
-    }
-
+    public void updateGrid(){this.mainFrame.getLeftPanel().getGridPanel().updateGrid();}
 }

@@ -33,10 +33,14 @@ public class Position {
         return coord.x() == x && coord.y() == y;
     }
 
-    public void add(Position coord) {
-        x += coord.x();
-        y += coord.y();
+
+
+    public Position add(Position pos){
+        return new Position(this.x + pos.x(), this.y + pos.y());
     }
 
+    public Position mul(int m){
+        return new Position(this.x*m, this.y*m);
+    }
 
 }

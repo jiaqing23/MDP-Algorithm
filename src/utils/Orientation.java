@@ -28,41 +28,71 @@ public class Orientation {
         orientation = (orientation+1)%4;
     }
 
-    public int getLeft(){
+    public int getLeftOrientation(){
         return (orientation+3)%4;
     }
 
-    public int getRight(){
+    public int getRightOrientation(){
         return (orientation+1)%4;
     }
 
-    public Position getHeadPosition(Position position){
+    public Position getFrontPosition(){
         switch (orientation){
             case 0:
-                return new Position(position.x()+1, position.y());
+                return new Position(1, 0);
             case 1:
-                return new Position(position.x(), position.y()+1);
+                return new Position(0, 1);
             case 2:
-                return new Position(position.x()-1, position.y());
+                return new Position(-1, 0);
             case 3:
-                return new Position(position.x(), position.y()-1);
+                return new Position(0, -1);
             default:
-                return position;
+                return new Position(0, 0);
         }
     }
 
-    public Position getBackPosition(Position position){
+    public Position getBackPosition(){
         switch (orientation){
             case 0:
-                return new Position(position.x()-1, position.y());
+                return new Position(-1, 0);
             case 1:
-                return new Position(position.x(), position.y()-1);
+                return new Position(0, -1);
             case 2:
-                return new Position(position.x()+1, position.y());
+                return new Position(1, 0);
             case 3:
-                return new Position(position.x(), position.y()+1);
+                return new Position(0, 1);
             default:
-                return position;
+                return new Position(0, 0);
+        }
+    }
+
+    public Position getLeftPosition(){
+        switch (orientation){
+            case 0:
+                return new Position(0, -1);
+            case 1:
+                return new Position(1, 0);
+            case 2:
+                return new Position(0, 1);
+            case 3:
+                return new Position(-1, 0);
+            default:
+                return new Position(0, 0);
+        }
+    }
+
+    public Position getRightPosition(){
+        switch (orientation){
+            case 0:
+                return new Position(0, 1);
+            case 1:
+                return new Position(-1, 0);
+            case 2:
+                return new Position(0, -1);
+            case 3:
+                return new Position(1, 0);
+            default:
+                return new Position(0, 0);
         }
     }
 }

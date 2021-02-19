@@ -5,13 +5,10 @@ import map.WayPoint;
 import map.WayPointSpecialState;
 import map.WayPointState;
 import robot.*;
-import simulation.GUI;
 import utils.Orientation;
 import utils.Position;
 
-import java.awt.desktop.SystemEventListener;
 import java.util.*;
-import java.util.logging.ConsoleHandler;
 
 public class FastestPath {
     private static final int ROTATE_WEIGHT = 1;
@@ -32,8 +29,6 @@ public class FastestPath {
 
         for(int i = 0; i < ROW; i++) {
             for(int j = 0; j < COL; j++){
-                map.getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
-
                 for(int k = 0; k < 4; k++){
                     states[i][j][k] = new State(map.getMap()[i][j].getPosition(), new Orientation(k));
                     dist[i][j][k] = Integer.MAX_VALUE;
@@ -51,14 +46,14 @@ public class FastestPath {
                     State state = states[i][j][k];
 
                     //Rotate
-                    state.addNeighbour(new Transition(state, states[i][j][state.getOrientation().getRight()],
-                                                ROTATE_WEIGHT, RobotAction.RotateRight));
-                    state.addNeighbour(new Transition(state, states[i][j][state.getOrientation().getLeft()],
-                                                ROTATE_WEIGHT, RobotAction.RotateLeft));
+                    state.addNeighbour(new Transition(state, states[i][j][state.getOrientation().getRightOrientation()],
+                                                ROTATE_WEIGHT, RobotAction.TurnRight));
+                    state.addNeighbour(new Transition(state, states[i][j][state.getOrientation().getLeftOrientation()],
+                                                ROTATE_WEIGHT, RobotAction.TurnLeft));
 
                     //Go straight/back
-                    Position front = state.getOrientation().getHeadPosition(state.getPosition());
-                    Position back = state.getOrientation().getBackPosition(state.getPosition());
+                    Position front = state.getPosition().add(state.getOrientation().getFrontPosition());
+                    Position back = state.getPosition().add(state.getOrientation().getBackPosition());
                     if (map.getMap()[front.x()][front.y()].getState() != WayPointState.isObstacle
                             && Robot.checkValidPosition(map, front)) {
                         state.addNeighbour(new Transition(state, states[front.x()][front.y()][k], 1, RobotAction.MoveForward));
@@ -119,29 +114,4 @@ public class FastestPath {
         System.out.println(dist[endPosition.x()][endPosition.y()][endOrientation.getOrientation()]);
         return actions;
     }
-
-
-
-    public static void runFastestPath(GUI gui, Robot robot, int executePeriod){
-        ArrayList<RobotAction> actions =  solve(gui.getMap(), robot.getPosition(), gui.getMap().GOAL,
-                                                robot.getOrientation(), new Orientation(0));
-
-        Timer fastestPathThread = new Timer();
-
-        gui.displayFastestPath();
-//
-//        fastestPathThread.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                if (!actions.isEmpty()) {
-//                    gui.getRobot().execute(actions.pop());
-//                    gui.update(_gui.getMap(), _gui.getRobot());
-//                } else {
-//                    System.out.println("Path completed.");
-//                    this.cancel();
-//                }
-//            }
-//        }, executePeriod, executePeriod);
-    }
-
 }
