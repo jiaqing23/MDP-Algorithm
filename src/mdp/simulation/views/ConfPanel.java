@@ -1,5 +1,7 @@
 package mdp.simulation.views;
 
+import mdp.Main;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -45,7 +47,7 @@ public class ConfPanel extends JPanel{
         terminationCheckBox.setBackground(new java.awt.Color(241, 209, 133));
 
         JPanel panel4 = new JPanel(new FlowLayout());
-        simulationCheckBox = new JCheckBox("Simulation Mode");
+        simulationCheckBox = new JCheckBox("Simulation Mode", Main.isSimulating());
         panel4.add(simulationCheckBox);
         panel4.setBackground(new java.awt.Color(241, 209, 133));
         simulationCheckBox.setBackground(new java.awt.Color(241, 209, 133));
