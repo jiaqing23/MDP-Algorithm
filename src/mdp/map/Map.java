@@ -82,14 +82,34 @@ public class Map {
         int tempNum;
         for(int i = 0; i < ROW; i++){
             for(int j = 0; j < COL; j++){
-                if(map[i][j].getState()!=WayPointState.isEmpty) {
-                    tempMDF+="1";
-                }else{
+                if(map[i][j].getState()==WayPointState.isUnexplored) {
                     tempMDF+="0";
+                }else{
+                    tempMDF+="1";
                 }
             }
         }
         tempMDF+="11";
         mdfString.setMDFBinary(tempMDF);
+    }
+
+    public void updateMDF2(){
+        String tempMDF="";
+        int count=0;
+        int tempNum;
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                if(map[i][j].getState()==WayPointState.isEmpty) {
+                    tempMDF+="0";
+                }else if(map[i][j].getState()==WayPointState.isObstacle){
+                    tempMDF+="1";
+                }
+            }
+        }
+        while((tempMDF.length()%8!=0)){
+            tempMDF+="0";
+        }
+
+        mdfString.setMDFBinary2(tempMDF);
     }
 }

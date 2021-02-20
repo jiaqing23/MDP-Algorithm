@@ -139,8 +139,10 @@ public class EventHandler {
         try {
             FileWriter myWriter = new FileWriter("MDF.txt");
             gui.getMap().updateMDF(); // testing
+            gui.getMap().updateMDF2();
             myWriter.write(gui.getMap().getMdfString().getMDFHex());
-             myWriter.close();
+            myWriter.write("\n"+gui.getMap().getMdfString().getMDFHex2());
+            myWriter.close();
             JOptionPane.showMessageDialog(null,"Export successfully.",
                     "Export",JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException f) {
