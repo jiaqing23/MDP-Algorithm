@@ -60,56 +60,55 @@ public class Map {
     }
 
     public void updateMapByMDF(){
-        String tempS =  mdfString.getMDFBinary();
-        tempS = tempS.substring(2,302);
-        int count=0;
+        String mdfString1 =  mdfString.getMDFBinary1().substring(2,302);
+        String mdfString2 = mdfString.getMDFBinary2();
+        int count1 = 0;
+        int count2 = 0;
+
         for(int i = 0; i < ROW; i++){
             for(int j = 0; j < COL; j++){
-                if(tempS.charAt(count)=='1') {
-                    map[i][j].setState(WayPointState.isObstacle);
+                if(mdfString1.charAt(count1) == '1') {
+                    if(mdfString2.charAt(count2) == '0') map[i][j].setState(WayPointState.isEmpty);
+                    else map[i][j].setState(WayPointState.isObstacle);
+                    count2++;
                 }
                 else{
-                    map[i][j].setState(WayPointState.isEmpty);
+                    map[i][j].setState(WayPointState.isUnexplored);
                 }
-                count++;
+                count1++;
             }
         }
     }
 
     public void updateMDF(){
-        String tempMDF="11";
-        int count=0;
-        int tempNum;
+        String tempMDF = "11";
         for(int i = 0; i < ROW; i++){
             for(int j = 0; j < COL; j++){
                 if(map[i][j].getState()==WayPointState.isUnexplored) {
-                    tempMDF+="0";
-                }else{
-                    tempMDF+="1";
+                    tempMDF += "0";
+                }
+                else{
+                    tempMDF += "1";
                 }
             }
         }
-        tempMDF+="11";
-        mdfString.setMDFBinary(tempMDF);
-    }
+        tempMDF += "11";
+        mdfString.setMDFBinary1(tempMDF);
 
-    public void updateMDF2(){
-        String tempMDF="";
-        int count=0;
-        int tempNum;
+        tempMDF = "";
         for(int i = 0; i < ROW; i++){
             for(int j = 0; j < COL; j++){
                 if(map[i][j].getState()==WayPointState.isEmpty) {
-                    tempMDF+="0";
-                }else if(map[i][j].getState()==WayPointState.isObstacle){
-                    tempMDF+="1";
+                    tempMDF += "0";
+                }
+                else if(map[i][j].getState()==WayPointState.isObstacle){
+                    tempMDF += "1";
                 }
             }
         }
-        while((tempMDF.length()%8!=0)){
-            tempMDF+="0";
+        while((tempMDF.length() %8) != 0){
+            tempMDF += "0";
         }
-
         mdfString.setMDFBinary2(tempMDF);
     }
 }

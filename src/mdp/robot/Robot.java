@@ -1,8 +1,10 @@
 package mdp.robot;
 
+import mdp.Main;
 import mdp.map.Map;
 import mdp.map.WayPointState;
-import mdp.utils.*;
+import mdp.utils.Orientation;
+import mdp.utils.Position;
 
 import java.util.ArrayList;
 
@@ -70,28 +72,39 @@ public class Robot {
         }
     }
 
-    public void executeRemainingActions(){
+    public void executeRemainingActions(int executePeriod){
         while(nextActionIdx < bufferedActions.size()){
             executeNextAction();
+            if (Main.isSimulating()) {
+                try {
+                    Thread.sleep(executePeriod);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
     private void moveForward(){
         Position nextPositon = getHeadPosition();
         if(checkValidPosition(nextPositon)) position = nextPositon;
+        Main.getGui().updateGrid();
     }
 
     private void moveBackward(){
         Position nextPositon = getBackPosition();
         if(checkValidPosition(nextPositon)) position = nextPositon;
+        Main.getGui().updateGrid();
     }
 
     private void turnLeft(){
         orientation.turnLeft();
+        Main.getGui().updateGrid();
     }
 
     private void turnRight(){
         orientation.turnRight();
+        Main.getGui().updateGrid();
     }
 
     public boolean checkValidPosition(Position position){
@@ -108,7 +121,7 @@ public class Robot {
         for(int i = -1; i <= 1; i++)
             for(int j = -1; j <= 1; j++)
                 if(!map.inBoundary(new Position(position.x()+i, position.y()+j)) ||
-                        map.getMap()[position.x()+i][position.y()+j].getState() == WayPointState.isObstacle)
+                        map.getMap()[position.x()+i][position.y()+j].getState() != WayPointState.isEmpty)
                     return false;
         return true;
     }

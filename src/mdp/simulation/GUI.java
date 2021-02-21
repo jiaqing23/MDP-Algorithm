@@ -37,4 +37,8 @@ public class GUI{
     }
 
     public void updateGrid(){this.mainFrame.getLeftPanel().getGridPanel().updateGrid();}
+
+    public void trigger(MouseClickEvent e) {
+        eventHandler.resolveEvent(e);
+    }
 }

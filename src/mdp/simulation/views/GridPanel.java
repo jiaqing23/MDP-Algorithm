@@ -74,6 +74,7 @@ public class GridPanel extends JPanel {
                 switch(grid[i][j].getWayPoint().getState()){
                     case isObstacle -> grid[i][j].setBackground(Color.black);
                     case isEmpty -> grid[i][j].setBackground(Color.white);
+                    case isUnexplored -> grid[i][j].setBackground(Color.gray);
                 }
             }
         }

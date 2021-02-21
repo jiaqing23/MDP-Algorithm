@@ -23,6 +23,10 @@ public class Simulator {
         }
     }
 
+    public Map getCachedMap() {
+        return cachedMap;
+    }
+
     public SensorData getSensorData(Robot robot){
         SensorData sensor = new SensorData();
         Position pos = robot.getPosition();

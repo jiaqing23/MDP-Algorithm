@@ -1,11 +1,11 @@
 package mdp;
 
-import javax.swing.*;
-import java.io.IOException;
-
 import mdp.map.Map;
 import mdp.robot.Robot;
 import mdp.simulation.GUI;
+
+import javax.swing.*;
+import java.io.IOException;
 
 public class Main {
     private static GUI gui;
@@ -32,5 +32,9 @@ public class Main {
 
     public static void setSimulating(boolean v) {
         simulating = v;
+    }
+
+    public static GUI getGui() {
+        return gui;
     }
 }
