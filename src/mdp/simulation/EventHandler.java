@@ -56,6 +56,8 @@ public class EventHandler {
                 addMouseListener(wrapMouseAdapter(MouseClickEvent.ToggleSimulation));
         gui.getMainFrame().getRightPanel().getTaskPanel().getStopButton().
                 addMouseListener(wrapMouseAdapter(MouseClickEvent.Stop));
+        gui.getMainFrame().getRightPanel().getHardwarePanel().getConnectRPIButton().
+                addMouseListener(wrapMouseAdapter(MouseClickEvent.ConnectRPI));
 
         gui.getMainFrame().getRightPanel().getMdfPanel().getTestingButton().
                 addMouseListener(wrapMouseAdapter(MouseClickEvent.Testing));
@@ -84,6 +86,7 @@ public class EventHandler {
             case RunFindImage -> runFindImage();
             case ToggleSimulation -> toggleSimulation();
             case Stop -> stop();
+            case ConnectRPI -> connectRPI();
             case Testing -> testing();
         }
     }
@@ -121,6 +124,10 @@ public class EventHandler {
 //        gui.getRobot().addBufferedAction(RobotAction.MoveBackward);
 //        gui.getRobot().executeNextAction();
 //    }
+
+    private void connectRPI(){
+        Main.connectToRpi();
+    }
 
     public void importMDF() {
         try {

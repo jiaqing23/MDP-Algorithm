@@ -1,5 +1,6 @@
 package mdp;
 
+import mdp.communication.RPIConnection;
 import mdp.map.Map;
 import mdp.robot.Robot;
 import mdp.simulation.GUI;
@@ -12,6 +13,7 @@ public class Main {
     private static Robot robot;
     private static Map map;
     private static boolean simulating = true;
+    private static RPIConnection rpi;
 
     public static void main(String[] args) throws IOException {
         System.out.println("Initiating GUI...");
@@ -24,6 +26,10 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             gui = new GUI(robot, map);
         });
+    }
+
+    public static void connectToRpi(){
+        rpi = new RPIConnection();
     }
 
     public static boolean isSimulating() {

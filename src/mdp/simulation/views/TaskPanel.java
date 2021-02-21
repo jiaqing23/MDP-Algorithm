@@ -5,25 +5,25 @@ import java.awt.*;
 
 
 public class TaskPanel extends JPanel{
-    private JButton FastestPathButton, ExplorationButton, FindImageButton, StopButton;
+    private JButton fastestPathButton, explorationButton, findImageButton, stopButton;
 
     public TaskPanel(){
         this.setLayout(new GridLayout(1,3));
 
-        FastestPathButton = new JButton("Fastest Path");
-        ExplorationButton = new JButton("Exploration");
-        FindImageButton = new JButton("Find Image");
-        StopButton = new JButton("Stop");
+        fastestPathButton = new JButton("Fastest Path");
+        explorationButton = new JButton("Exploration");
+        findImageButton = new JButton("Find Image");
+        stopButton = new JButton("Stop");
 
         Box box = new Box(BoxLayout.X_AXIS);
         box.add(Box.createHorizontalGlue());
-        box.add(FastestPathButton);
+        box.add(fastestPathButton);
         box.add(Box.createHorizontalStrut(15));
-        box.add(ExplorationButton);
+        box.add(explorationButton);
         box.add(Box.createHorizontalStrut(15));
-        box.add(FindImageButton);
+        box.add(findImageButton);
         box.add(Box.createHorizontalStrut(15));
-        box.add(StopButton);
+        box.add(stopButton);
         box.add(Box.createHorizontalGlue());
         this.add(box);
 
@@ -31,18 +31,18 @@ public class TaskPanel extends JPanel{
     }
 
     public JButton getExplorationButton() {
-        return ExplorationButton;
+        return explorationButton;
     }
 
     public JButton getFastestPathButton() {
-        return FastestPathButton;
+        return fastestPathButton;
     }
 
     public JButton getFindImageButton() {
-        return FindImageButton;
+        return findImageButton;
     }
 
     public JButton getStopButton() {
-        return StopButton;
+        return stopButton;
     }
 }

@@ -7,6 +7,8 @@ public enum MouseClickEvent {
     Stop,
     ToggleSimulation,
 
+    ConnectRPI, TestSensor,
+
 
     Testing
 }
