@@ -43,4 +43,8 @@ public class Main {
     public static GUI getGui() {
         return gui;
     }
+
+    public static RPIConnection getRpi() {
+        return rpi;
+    }
 }

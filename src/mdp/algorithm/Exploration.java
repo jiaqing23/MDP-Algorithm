@@ -1,5 +1,6 @@
 package mdp.algorithm;
 
+import mdp.Main;
 import mdp.map.Map;
 import mdp.map.WayPointSpecialState;
 import mdp.map.WayPointState;
@@ -25,6 +26,8 @@ public class Exploration {
     private int timeLimit;
     private int coverageLimit;
 
+    private static volatile String sensingDataFromRPI;
+
     public Exploration(GUI gui, Robot robot, Map map, int executePeriod, int timeLimit, int coverageLimit){
         this.robot = robot;
         this.map = map;
@@ -39,12 +42,35 @@ public class Exploration {
         return simulator;
     }
 
-    public void sense(){
-        if (robot.gotRemainingActions()) {
-            robot.executeRemainingActions(executePeriod);
-        }
+    public static void setSensingDataFromRPI(String sensingDataFromRPI) {
+        Exploration.sensingDataFromRPI = sensingDataFromRPI;
+    }
 
-        SensorData sensor = simulator.getSensorData(robot);
+    public void sense(){
+        //TODO: process initial sense
+        //if (robot.gotRemainingActions()) {
+            robot.executeRemainingActions(executePeriod, true);
+        //}
+
+        SensorData sensor = new SensorData();
+        if(Main.isSimulating()) sensor = simulator.getSensorData(robot);
+        else{
+            if(sensingDataFromRPI.isEmpty()){
+                System.out.println("Sensor data is empty!");
+            }
+            else{
+                try{
+                    sensor.frontL = Integer.parseInt(String.valueOf(sensingDataFromRPI.charAt(0)));
+                    sensor.frontM = Integer.parseInt(String.valueOf(sensingDataFromRPI.charAt(1)));
+                    sensor.frontR = Integer.parseInt(String.valueOf(sensingDataFromRPI.charAt(2)));
+                    sensor.leftF  = Integer.parseInt(String.valueOf(sensingDataFromRPI.charAt(3)));
+                    sensor.leftB  = Integer.parseInt(String.valueOf(sensingDataFromRPI.charAt(4)));
+                    sensor.rightF = Integer.parseInt(String.valueOf(sensingDataFromRPI.charAt(5)));
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }
 
         Orientation ori = robot.getOrientation();
         Position pos = robot.getPosition();
@@ -54,6 +80,8 @@ public class Exploration {
         updateMap(robot.getHeadPosition().add(ori.getLeftPosition()), ori.getLeftOrientation(), sensor.leftF, SHORT_RANGE);
         updateMap(robot.getBackPosition().add(ori.getLeftPosition()), ori.getLeftOrientation(), sensor.leftB, SHORT_RANGE);
         updateMap(robot.getHeadPosition().add(ori.getRightPosition()), ori.getRightOrientation(), sensor.rightF, LONG_RANGE);
+
+        gui.updateGrid();
     }
 
     private int updateMap(Position position, Orientation orientation, int dist, int range){
@@ -116,11 +144,11 @@ public class Exploration {
 
     public void leftWallFollowing(){
         Walkable leftWalkable = checkWalkable(robot.getOrientation().getLeftOrientation());
-        sense();
         if(leftWalkable == Walkable.Yes){
             robot.addBufferedAction(RobotAction.TurnLeft);
             sense();
             robot.addBufferedAction(RobotAction.MoveForward);
+            sense();
         }
         else if(leftWalkable == Walkable.No){
             turnRightTillEmpty();
@@ -131,6 +159,7 @@ public class Exploration {
             Walkable frontWalkable = checkWalkable(robot.getOrientation());
             if(frontWalkable == Walkable.Yes){
                 robot.addBufferedAction(RobotAction.MoveForward);
+                sense();
             }
             else if(frontWalkable == Walkable.No){
                 turnRightTillEmpty();
@@ -148,6 +177,7 @@ public class Exploration {
             sense();
         }
         robot.addBufferedAction(RobotAction.MoveForward);
+        sense();
     }
 
     public ArrayList<Position> getUnexplored(){
@@ -195,18 +225,20 @@ public class Exploration {
 
         boolean reachGoal = false;
 
+        sense();
+        System.out.println("First Sense Done!");
         while(!reachGoal || !robot.getPosition().equals(map.getStart())){
 
             if(robot.getPosition().equals(map.getGoal())) reachGoal = true;
 
             leftWallFollowing();
-            robot.executeRemainingActions(executePeriod);
 
             ArrayList<Position> unexplored = getUnexplored();
             if((100 - 100*unexplored.size()/(ROW*COL)) > coverageLimit) break;
             if(checkTimeUp()) break;
         }
 
+        System.out.println("First round exploration done.");
         if(gui.getMainFrame().getRightPanel().getConfPanel().getTerminationCheckBox().isSelected()) return;
 
         //Explore Remaining Area
@@ -234,7 +266,7 @@ public class Exploration {
             actions.remove(actions.size() - 1);
         }
         robot.addBufferedActions(actions);
-        robot.executeRemainingActions(executePeriod);
+        robot.executeRemainingActions(executePeriod, false);
         gui.updateGrid();
         System.out.println("Exploration Done!");
     }

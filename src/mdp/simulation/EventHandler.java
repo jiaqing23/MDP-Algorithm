@@ -3,6 +3,7 @@ package mdp.simulation;
 import mdp.Main;
 import mdp.algorithm.Exploration;
 import mdp.algorithm.FastestPath;
+import mdp.algorithm.FindImage;
 import mdp.map.WayPointSpecialState;
 import mdp.robot.Robot;
 import mdp.robot.RobotAction;
@@ -27,6 +28,7 @@ public class EventHandler {
     private Timer timerThread;
     private Thread explorationThread;
     private Exploration exploration;
+    private FindImage findImage;
 
     public EventHandler(GUI gui){
         this.gui = gui;
@@ -203,6 +205,7 @@ public class EventHandler {
 
         robot.setPosition(gui.getMap().getStart());
         robot.setOrientation(new Orientation(0));
+        robot.clearBufferedAction();
 
         for(int i = 0; i < gui.getMap().ROW; i++){
             for(int j = 0; j < gui.getMap().COL; j++){
@@ -239,8 +242,6 @@ public class EventHandler {
             return;
         }
 
-        startTimer();
-
         for(int i = 0; i < gui.getMap().ROW; i++)
             for(int j = 0; j < gui.getMap().COL; j++)
                 gui.getMap().getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
@@ -263,19 +264,26 @@ public class EventHandler {
 
         gui.updateGrid();
 
-        fastestPathThread = new Timer();
-        fastestPathThread.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (robot.gotRemainingActions()) {
-                    robot.executeNextAction();
-                } else {
-                    System.out.println("Path completed.");
-                    this.cancel();
-                    stopTimer();
+        if(!Main.isSimulating()){
+            robot.executeRemainingActions(executePeriod, false);
+        }
+        else{
+            startTimer();
+            fastestPathThread = new Timer();
+            fastestPathThread.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (robot.gotRemainingActions()) {
+                        robot.executeNextAction();
+                    } else {
+                        System.out.println("Path completed.");
+                        this.cancel();
+                        stopTimer();
+                    }
                 }
-            }
-        }, executePeriod, executePeriod);
+            }, executePeriod, executePeriod);
+        }
+
     }
 
     public void runExploration(){
@@ -324,14 +332,17 @@ public class EventHandler {
 
         startTimer();
 
-        exploration = new Exploration(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
+        exploration = new Exploration(gui, robot, gui.getMap(), executePeriod, 10000, 100);
+        findImage = new FindImage(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
         explorationThread = new Thread(() -> {
             try {
-                exploration.solve();
+                //TODO: Add back
+                //exploration.solve();
+                findImage.solve2();
                 stopTimer();
                 explorationThread.stop();
             } catch(Exception exception){
-                System.out.println(exception.getMessage());
+                exception.printStackTrace();
                 return;
             }
         });

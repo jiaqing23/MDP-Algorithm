@@ -15,6 +15,8 @@ public class Robot {
     private ArrayList<RobotAction> bufferedActions;
     private int nextActionIdx; //Pointer on next bufferedActions index
 
+    private static volatile boolean actionCompleted = false;
+
     public Robot(Map map){
         this.map = map;
         this.position = new Position(1,1);
@@ -59,6 +61,15 @@ public class Robot {
         return (nextActionIdx < this.bufferedActions.size());
     }
 
+    public static void setActionCompleted(boolean actionCompleted) {
+        Robot.actionCompleted = actionCompleted;
+    }
+
+    public void clearBufferedAction(){
+        this.bufferedActions.clear();
+        nextActionIdx = 0;
+    }
+
     public void executeNextAction(){
         if(nextActionIdx < bufferedActions.size()){
             RobotAction nextAction = bufferedActions.get(nextActionIdx);
@@ -72,9 +83,11 @@ public class Robot {
         }
     }
 
-    public void executeRemainingActions(int executePeriod){
+    public void executeRemainingActions(int executePeriod, boolean waitActionComplete){
+        ArrayList<RobotAction> actions;
+        actions = new ArrayList<RobotAction>(bufferedActions.subList(nextActionIdx, bufferedActions.size()));
+
         while(nextActionIdx < bufferedActions.size()){
-            executeNextAction();
             if (Main.isSimulating()) {
                 try {
                     Thread.sleep(executePeriod);
@@ -82,6 +95,19 @@ public class Robot {
                     e.printStackTrace();
                 }
             }
+            executeNextAction();
+        }
+
+        if(!Main.isSimulating()){
+            Main.getRpi().sendPathCommand(actions);
+            while(waitActionComplete && !actionCompleted) { //Wait a while and check
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            actionCompleted = false;
         }
     }
 

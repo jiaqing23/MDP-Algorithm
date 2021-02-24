@@ -23,12 +23,10 @@ class Node implements Comparator<Node> {
             return -1;
         else if (node1.cost > node2.cost)
             return 1;
-        else if(node1.state.getOrientation().getOrientation() < node2.state.getOrientation().getOrientation() ){
+        else if(node1.state.getOrientation().getOrientation() < node2.state.getOrientation().getOrientation())
             return -1;
-        }
-        else if(node1.state.getOrientation().getOrientation() > node2.state.getOrientation().getOrientation() ){
-        return 1;
-    }
+        else if(node1.state.getOrientation().getOrientation() > node2.state.getOrientation().getOrientation())
+            return 1;
         return 0;
     }
 }

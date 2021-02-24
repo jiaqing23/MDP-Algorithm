@@ -15,10 +15,10 @@ public class Server {
         ServerSocket ss = null;
         try {
             ss = new ServerSocket(3333);
-            Socket s = ss.accept();
+            Socket socket = ss.accept();
 
-            din = new DataInputStream(s.getInputStream());
-            dout = new DataOutputStream(s.getOutputStream());
+            din = new DataInputStream(socket.getInputStream());
+            dout = new DataOutputStream(socket.getOutputStream());
             br = new BufferedReader(new InputStreamReader(System.in));
 
             new Thread() {
