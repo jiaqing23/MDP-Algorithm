@@ -20,11 +20,9 @@ public class RPIConnection {
     private DataInputStream din;
     private DataOutputStream dout;
 
-    private String IPAddress = "192.168.20.20";
-    private int port = 8080;
-
-//    private String IPAddress = "localhost";
-//    private int po
+    private boolean TESTING = true;
+    private String IPAddress = TESTING?"localhost":"192.168.20.20";
+    private int port = true?3333:8000;
 
     public RPIConnection(){
         try {
@@ -33,6 +31,10 @@ public class RPIConnection {
             //socket.bind(new java.net.InetSocketAddress("192.168.20.20", 8080));
             din= new DataInputStream(socket.getInputStream());
             dout= new DataOutputStream(socket.getOutputStream());
+
+
+            Main.getGui().getMainFrame().getRightPanel().getConfPanel().getSimulationCheckBox().setSelected(false);
+            Main.setSimulating(false);
 
             JOptionPane.showMessageDialog(null,"Connected!",
                     "Connect to RPI",JOptionPane.INFORMATION_MESSAGE);
@@ -81,7 +83,6 @@ public class RPIConnection {
             din.read(buffer);
             s = new String(buffer, 0, buffer.length);
             s = s.trim();
-            System.out.println("Length received = "+ s.length());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -90,7 +91,8 @@ public class RPIConnection {
 
     public void send(String s){
         try {
-            dout.writeUTF(s);
+            System.out.println("Sent to RPI: " + s);
+            dout.write(s.getBytes());
             dout.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -119,16 +121,31 @@ public class RPIConnection {
         String s = "";
         for(RobotAction action: actions){
             switch (action){
-                case MoveForward -> s += "F";
-                case TurnLeft -> s += "L";
-                case TurnRight -> s += "R";
+                case MoveForward -> s += "W";
+                case TurnLeft -> s += "A";
+                case TurnRight -> s += "D";
             }
         }
-        send(s);
+        int count = 0;
+        String s2 = "";
+        for(int i = 0; i < s.length(); i++){
+            if(i == 0 || s.charAt(i)!=s.charAt(i-1)){
+                if(i!=0) s2 += (char)((int)'0' + count);
+                s2+=s.charAt(i);
+                count = 0;
+            }
+            count++;
+        }
+        if(count > 0) s2 += (char)((int)'0' + count); //count = 0 means s = ""
+
+        System.out.println(s);
+        System.out.println(s2);
+        send(s2);
     }
 
     //TODO
     public void sendTakePhotoCommand(){
         //WAIT RECEIVE
+        System.out.println("Take Photo");
     }
 }

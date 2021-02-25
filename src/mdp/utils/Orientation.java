@@ -16,6 +16,11 @@ public class Orientation {
         this.orientation = x;
     }
 
+    @Override
+    public String toString() {
+        return String.valueOf(orientation);
+    }
+
     public int getOrientation() {
         return orientation;
     }

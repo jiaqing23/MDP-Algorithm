@@ -25,6 +25,8 @@ public class Exploration {
     private int executePeriod;
     private int timeLimit;
     private int coverageLimit;
+    private FindImageImproved findImage;
+    private boolean findImageMode = false;
 
     private static volatile String sensingDataFromRPI;
 
@@ -96,7 +98,10 @@ public class Exploration {
             for (int i = 1; i <= dist; i++) {
                 pos = pos.add(orientation.getFrontPosition());
                 if(i < dist) map.getMap()[pos.x()][pos.y()].setState(WayPointState.isEmpty);
-                else if(map.inBoundary(pos)) map.getMap()[pos.x()][pos.y()].setState(WayPointState.isObstacle);
+                else if(map.inBoundary(pos)){
+                    map.getMap()[pos.x()][pos.y()].setState(WayPointState.isObstacle);
+                    if(findImageMode) findImage.updateObstacle(pos);
+                }
             }
         }
         return 0;
@@ -145,8 +150,13 @@ public class Exploration {
     public void leftWallFollowing(){
         Walkable leftWalkable = checkWalkable(robot.getOrientation().getLeftOrientation());
         if(leftWalkable == Walkable.Yes){
+
+            if(findImageMode)
+                findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.TurnLeft);
             robot.addBufferedAction(RobotAction.TurnLeft);
             sense();
+            if(findImageMode)
+                findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.MoveForward);
             robot.addBufferedAction(RobotAction.MoveForward);
             sense();
         }
@@ -158,6 +168,8 @@ public class Exploration {
             sense();
             Walkable frontWalkable = checkWalkable(robot.getOrientation());
             if(frontWalkable == Walkable.Yes){
+                if(findImageMode)
+                    findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.MoveForward);
                 robot.addBufferedAction(RobotAction.MoveForward);
                 sense();
             }
@@ -168,14 +180,17 @@ public class Exploration {
                 System.out.println("Error: Unsure");
             }
         }
-
     }
 
     public void turnRightTillEmpty(){
         while(checkWalkable(robot.getOrientation()) == Walkable.No){
+            if(findImageMode)
+                findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.TurnRight);
             robot.addBufferedAction(RobotAction.TurnRight);
             sense();
         }
+        if(findImageMode)
+            findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.MoveForward);
         robot.addBufferedAction(RobotAction.MoveForward);
         sense();
     }
@@ -269,6 +284,81 @@ public class Exploration {
         robot.executeRemainingActions(executePeriod, false);
         gui.updateGrid();
         System.out.println("Exploration Done!");
+    }
+
+    public void solveForFindImage(FindImageImproved findImage){
+        this.findImage = findImage;
+        findImageMode = true;
+
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                map.getMap()[i][j].setState(WayPointState.isUnexplored);
+                map.getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
+            }
+        }
+        for(int i = -1; i <= 1; i++){
+            for(int j = -1; j <= 1; j++){
+                map.getMap()[map.getStart().x()+i][map.getStart().y()+j].setState(WayPointState.isEmpty);
+            }
+        }
+
+        gui.updateGrid();
+        System.out.println("Exploration Start!");
+
+        boolean reachGoal = false;
+
+        sense();
+        System.out.println("First Sense Done!");
+        while(!reachGoal || !robot.getPosition().equals(map.getStart())){
+
+            if(robot.getPosition().equals(map.getGoal())) reachGoal = true;
+
+            leftWallFollowing();
+
+            ArrayList<Position> unexplored = getUnexplored();
+            if((100 - 100*unexplored.size()/(ROW*COL)) > coverageLimit) break;
+            if(checkTimeUp()) break;
+        }
+
+        //Special case: image at right of the starting point
+        if(robot.getPosition().equals(map.getStart())){
+            findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.TurnRight);
+        }
+
+        System.out.println("First round exploration done.");
+        if(gui.getMainFrame().getRightPanel().getConfPanel().getTerminationCheckBox().isSelected()) return;
+
+        //Explore Remaining Area
+        while(true){
+            ArrayList<Position> unexplored = getUnexplored();
+            if((100 - 100*unexplored.size()/(ROW*COL)) > coverageLimit) break;
+            if(checkTimeUp()) break;
+
+            if(unexplored.size() == 0) break;
+
+            ArrayList<RobotAction> actions = FastestPath.solveExplorationFastestPath(map,
+                    robot.getPosition(), robot.getOrientation());
+
+            for(RobotAction action: actions){
+                robot.addBufferedAction(action);
+                sense();
+            }
+        }
+
+//        ArrayList<RobotAction> actions = FastestPath.solve(map, robot.getPosition(), map.getStart(),
+//                robot.getOrientation(), new Orientation(0));
+//        while(actions.size() > 0
+//                && (actions.get(actions.size()-1) == RobotAction.TurnLeft ||
+//                actions.get(actions.size()-1) == RobotAction.TurnRight)){
+//            actions.remove(actions.size() - 1);
+//        }
+//        robot.addBufferedActions(actions);
+//        robot.executeRemainingActions(executePeriod, false);
+
+        gui.updateGrid();
+        System.out.println("Exploration for Find Image Done!");
+
+        findImageMode = false;
     }
 
 }

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
-public class FindImage {
+public class FindImageImproved {
     public static final int ROW = 20;
     public static final int COL = 15;
 
@@ -25,8 +25,9 @@ public class FindImage {
     private int coverageLimit;
     private int needTakePhoto[][][] = new int[ROW][COL][4];
     private int candidateEdges[][][] = new int[ROW][COL][4];
+    private int middleObstacle[][] = new int[ROW][COL];
 
-    public FindImage(GUI gui, Robot robot, Map map, int executePeriod, int timeLimit, int coverageLimit){
+    public FindImageImproved(GUI gui, Robot robot, Map map, int executePeriod, int timeLimit, int coverageLimit){
         this.robot = robot;
         this.map = map;
         this.gui = gui;
@@ -35,7 +36,54 @@ public class FindImage {
         this.coverageLimit = coverageLimit;
     }
 
+    public void updateObstacle(Position position){
+        for(int k = 0; k < 4; k++){
+            Orientation orientation = new Orientation(k);
+            Position facingPosition = position.add(orientation.getFrontPosition());
+
+            if(map.inBoundary(facingPosition) && map.getWayPointState(facingPosition) == WayPointState.isEmpty &&
+                    candidateEdges[position.x()][position.y()][k] == 0){
+                candidateEdges[position.x()][position.y()][k] = 1;
+            }
+        }
+    }
+
+    public void findMiddleObstacle(){
+        DisjointSet dsu = new DisjointSet(ROW*COL+1);
+        int boundaryId = ROW*COL;
+
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                Position position = new Position(i, j);
+                if(map.getWayPointState(position) == WayPointState.isObstacle) {
+                    //Boundary block
+                    if(i == 0 || i == ROW-1 || j == 0 || j == COL-1) dsu.unite(boundaryId, position.x()*COL+position.y());
+
+                    for(int k = 0; k < 4; k++){
+                        Orientation orientation = new Orientation(k);
+                        Position adjPosition = position.add(orientation.getFrontPosition());
+                        if(map.inBoundary(adjPosition) && map.getWayPointState(adjPosition) == WayPointState.isObstacle){
+                            dsu.unite(adjPosition.x()*COL + adjPosition.y(), position.x()*COL+position.y());
+                        }
+                    }
+                }
+            }
+        }
+
+        for(int i = 0; i < ROW; i++) {
+            for(int j = 0; j < COL; j++){
+                Position position = new Position(i, j);
+                if(map.getWayPointState(position) == WayPointState.isObstacle
+                        && !dsu.same(boundaryId, position.x()*COL+position.y())){
+                    middleObstacle[i][j] = 1;
+                }
+                else middleObstacle[i][j] = 0;
+            }
+        }
+    }
+
     public ArrayList<State> initializeMapAndGetPositionToTakePhoto(){
+        findMiddleObstacle();
         for(int i = 0; i < ROW; i++){
             for(int j = 0; j < COL; j++){
                 for(int k = 0; k < 4; k++){
@@ -45,7 +93,7 @@ public class FindImage {
                     Orientation orientation = new Orientation(k);
                     Position facingPosition = position.add(orientation.getFrontPosition());
 
-                    if(map.inBoundary(facingPosition) && map.getWayPointState(position) == WayPointState.isObstacle &&
+                    if(map.inBoundary(facingPosition) && middleObstacle[position.x()][position.y()] == 1 &&
                             map.getWayPointState(facingPosition) == WayPointState.isEmpty){
                         candidateEdges[i][j][k] = 1;
                         //System.out.println(i + " " + j + " " + k);
@@ -123,41 +171,67 @@ public class FindImage {
         }
     }
 
-    public void solve(){
-        ArrayList<State> targets = initializeMapAndGetPositionToTakePhoto();
-        System.out.println("Number of Targets: " + targets.size());
+    public void checkNeedToTakePhotoDuringLeftWall(Position position, Orientation orientation, RobotAction nextAction){
 
-        int totalLength = 0;
-        while(!targets.isEmpty()){
-            if(checkTimeUp()) break;
+        Orientation cameraOrientation = orientation.getLeftOrientation();
+        Orientation oppositeCameraOrientation = cameraOrientation.getLeftOrientation().getLeftOrientation();
 
-            ArrayList<RobotAction> actions =
-                    FastestPath.solveFindImagePath(map, robot.getPosition(), robot.getOrientation(), targets);
-            robot.addBufferedActions(actions);
-            robot.executeRemainingActions(executePeriod, true);
-            totalLength+=actions.size();
+        ArrayList<Position> inRangePositions = new ArrayList<Position>();
+        Position posM = position.add(cameraOrientation.getFrontPosition().mul(2));
+        Position posL = posM.add(cameraOrientation.getLeftPosition());
+        Position posR = posM.add(cameraOrientation.getRightPosition());
+        Position posLF = posL.add(cameraOrientation.getFrontPosition());
+        Position posMF =  posM.add(cameraOrientation.getFrontPosition());
+        Position posRF =  posR.add(cameraOrientation.getFrontPosition());
+        inRangePositions.add(posM);
+        inRangePositions.add(posL);
+        inRangePositions.add(posR);
+        inRangePositions.add(posMF);
+        inRangePositions.add(posLF);
+        inRangePositions.add(posRF);
 
-            if(!Main.isSimulating()) Main.getRpi().sendTakePhotoCommand();
+
+        if(nextAction == RobotAction.TurnLeft){
+            //Do nothing
         }
+        else if(nextAction == RobotAction.TurnRight){
+            for(Position pos: inRangePositions){
+                if(map.inBoundary(pos) &&
+                        candidateEdges[pos.x()][pos.y()][oppositeCameraOrientation.getOrientation()] == 1){
 
-        ArrayList<RobotAction> actions = FastestPath.solve(map, robot.getPosition(), map.getStart(),
-                robot.getOrientation(), new Orientation(0));
-        while(actions.size() > 0
-                && (actions.get(actions.size()-1) == RobotAction.TurnLeft ||
-                actions.get(actions.size()-1) == RobotAction.TurnRight)){
-            actions.remove(actions.size() - 1);
+                    for(Position tem: inRangePositions){
+                        if(map.inBoundary(tem) &&
+                                candidateEdges[tem.x()][tem.y()][oppositeCameraOrientation.getOrientation()] == 1)
+                        candidateEdges[tem.x()][tem.y()][oppositeCameraOrientation.getOrientation()] = -1;
+                    }
+
+                    if(!Main.isSimulating()) Main.getRpi().sendTakePhotoCommand();
+                    System.out.println("Take photo at position " + position + " ,orientation " + orientation);
+                }
+            }
         }
-        totalLength+=actions.size();
-        robot.addBufferedActions(actions);
-        robot.executeRemainingActions(executePeriod, false);
-        gui.updateGrid();
+        else if(nextAction == RobotAction.MoveForward){
+            if((map.inBoundary(posL) &&
+                    candidateEdges[posL.x()][posL.y()][oppositeCameraOrientation.getOrientation()] == 1)||
+                (map.inBoundary(posLF) &&
+                        candidateEdges[posLF.x()][posLF.y()][oppositeCameraOrientation.getOrientation()] == 1)||
+                (map.inBoundary(posMF) && map.inBoundary(posR) &&
+                        candidateEdges[posMF.x()][posMF.y()][oppositeCameraOrientation.getOrientation()] == 1 &&
+                        candidateEdges[posR.x()][posR.y()][oppositeCameraOrientation.getOrientation()] == 1)) {
 
-        System.out.println("Total Length = " + totalLength);
-        System.out.println("Find Image Done!");
+                for(Position tem: inRangePositions){
+                    if(map.inBoundary(tem) &&
+                            candidateEdges[tem.x()][tem.y()][oppositeCameraOrientation.getOrientation()] == 1)
+                        candidateEdges[tem.x()][tem.y()][oppositeCameraOrientation.getOrientation()] = -1;
+                }
+
+                if(!Main.isSimulating()) Main.getRpi().sendTakePhotoCommand();
+                System.out.println("Take photo at position " + position + " ,orientation " + orientation);
+            }
+        }
     }
 
-    //TODO: Take photo update distance = 2
-    public void solve2(){
+    public void solve(){
         ArrayList<State> targets = initializeMapAndGetPositionToTakePhoto();
         System.out.println("Number of Targets: " + targets.size());
 
@@ -228,14 +302,14 @@ public class FindImage {
 
         System.out.println(tour);
         int totalLength = 0;
-       // ArrayList<State> targetSequence = new ArrayList<State>();
+        // ArrayList<State> targetSequence = new ArrayList<State>();
         for(int i = 0; i < tour.size(); i++){
             if(checkTimeUp()) break;
 
             State next = idToState.get(tour.get(i));
 
             ArrayList<RobotAction> actions = FastestPath.solve(map, robot.getPosition(), next.getPosition(),
-                                                                robot.getOrientation(), next.getOrientation());
+                    robot.getOrientation(), next.getOrientation());
             robot.addBufferedActions(actions);
             robot.executeRemainingActions(executePeriod, true);
 
@@ -261,10 +335,4 @@ public class FindImage {
 
         System.out.println("Find Image Done!");
     }
-
-
-    public void solve3(){
-
-    }
-
 }

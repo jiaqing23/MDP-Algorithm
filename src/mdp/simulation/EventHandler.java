@@ -4,6 +4,7 @@ import mdp.Main;
 import mdp.algorithm.Exploration;
 import mdp.algorithm.FastestPath;
 import mdp.algorithm.FindImage;
+import mdp.algorithm.FindImageImproved;
 import mdp.map.WayPointSpecialState;
 import mdp.robot.Robot;
 import mdp.robot.RobotAction;
@@ -144,8 +145,8 @@ public class EventHandler {
             gui.getMap().getMdfString().setMDFHex2(data);
             gui.getMap().updateMapByMDF();
             gui.updateGrid();
-            JOptionPane.showMessageDialog(null,"Import successfully.",
-                    "Import",JOptionPane.INFORMATION_MESSAGE);
+           // JOptionPane.showMessageDialog(null,"Import successfully.",
+             //       "Import",JOptionPane.INFORMATION_MESSAGE);
 
             myReader.close();
         } catch (FileNotFoundException f) {
@@ -333,12 +334,14 @@ public class EventHandler {
         startTimer();
 
         exploration = new Exploration(gui, robot, gui.getMap(), executePeriod, 10000, 100);
-        findImage = new FindImage(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
+        FindImageImproved findImageImproved = new FindImageImproved(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
         explorationThread = new Thread(() -> {
             try {
                 //TODO: Add back
                 //exploration.solve();
-                findImage.solve2();
+                //findImage.solve3();
+                exploration.solveForFindImage(findImageImproved);
+                findImageImproved.solve();
                 stopTimer();
                 explorationThread.stop();
             } catch(Exception exception){
