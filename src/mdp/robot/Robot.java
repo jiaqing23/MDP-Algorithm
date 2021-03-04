@@ -99,6 +99,7 @@ public class Robot {
         }
 
         if(!Main.isSimulating()){
+            actionCompleted = false;
             Main.getRpi().sendPathCommand(actions);
             while(waitActionComplete && !actionCompleted) { //Wait a while and check
                 try {
@@ -107,7 +108,6 @@ public class Robot {
                     e.printStackTrace();
                 }
             }
-            actionCompleted = false;
         }
     }
 

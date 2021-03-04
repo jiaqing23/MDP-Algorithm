@@ -27,6 +27,8 @@ public class FindImageImproved {
     private int candidateEdges[][][] = new int[ROW][COL][4];
     private int middleObstacle[][] = new int[ROW][COL];
 
+    private static volatile int totalImageDetected = 0;
+
     public FindImageImproved(GUI gui, Robot robot, Map map, int executePeriod, int timeLimit, int coverageLimit){
         this.robot = robot;
         this.map = map;
@@ -130,26 +132,42 @@ public class FindImageImproved {
                     Orientation cameraOrientation = orientation.getLeftOrientation();
                     Orientation oppositeCameraOrientation = cameraOrientation.getLeftOrientation().getLeftOrientation();
 
+                    int okM = 0, okL = 0, okR = 0;
                     Position posM = position.add(cameraOrientation.getFrontPosition().mul(2));
                     Position posL = posM.add(cameraOrientation.getLeftPosition());
                     Position posR = posM.add(cameraOrientation.getRightPosition());
 
-                    if(!map.inBoundary(posM) || !map.inBoundary(posL) || !map.inBoundary(posR)) continue;
+                    for(int dist = 0; dist < 3; dist++){
+                        if(!map.inBoundary(posM) || !map.inBoundary(posL) || !map.inBoundary(posR)) break;
 
-                    int needCheck1 = candidateEdges[posM.x()][posM.y()][oppositeCameraOrientation.getOrientation()];
-                    int needCheck2 = candidateEdges[posL.x()][posL.y()][oppositeCameraOrientation.getOrientation()];
-                    int needCheck3 = candidateEdges[posR.x()][posR.y()][oppositeCameraOrientation.getOrientation()];
+                        int needCheck1 = candidateEdges[posM.x()][posM.y()][oppositeCameraOrientation.getOrientation()];
+                        int needCheck2 = candidateEdges[posL.x()][posL.y()][oppositeCameraOrientation.getOrientation()];
+                        int needCheck3 = candidateEdges[posR.x()][posR.y()][oppositeCameraOrientation.getOrientation()];
 
-                    int count = 0;
-                    if(needCheck1 == 1) count++;
-                    if(needCheck2 == 1) count++;
-                    if(needCheck3 == 1) count++;
+                        if(needCheck1 == 1) okM = 1;
+                        if(needCheck2 == 1) okL = 1;
+                        if(needCheck3 == 1) okR = 1;
 
-                    if(count >= requireWall){
+                        if(okM == 0) posM = posM.add(cameraOrientation.getFrontPosition());
+                        if(okL == 0) posL = posL.add(cameraOrientation.getFrontPosition());
+                        if(okR == 0) posR = posR.add(cameraOrientation.getFrontPosition());
+                    }
+
+                    if(okM + okL + okR >= requireWall){
+                        //System.out.println("Current pos and ori = "+i + " " + j+ " " + k);
                         needTakePhoto[i][j][k] = 1;
-                        candidateEdges[posM.x()][posM.y()][oppositeCameraOrientation.getOrientation()] = -1;
-                        candidateEdges[posL.x()][posL.y()][oppositeCameraOrientation.getOrientation()] = -1;
-                        candidateEdges[posR.x()][posR.y()][oppositeCameraOrientation.getOrientation()] = -1;
+                        if(okM == 1) {
+                            candidateEdges[posM.x()][posM.y()][oppositeCameraOrientation.getOrientation()] = -1;
+                           // System.out.println("posM x,y = "+ posM.x() + " " + posM.y());
+                        }
+                        if(okL == 1) {
+                            candidateEdges[posL.x()][posL.y()][oppositeCameraOrientation.getOrientation()] = -1;
+                           // System.out.println("posL x,y = "+ posL.x() + " " + posL.y());
+                        }
+                        if(okR == 1) {
+                            candidateEdges[posR.x()][posR.y()][oppositeCameraOrientation.getOrientation()] = -1;
+                           //System.out.println("posR x,y = "+ posR.x() + " " + posR.y());
+                        }
                     }
                 }
             }
@@ -205,7 +223,7 @@ public class FindImageImproved {
                         candidateEdges[tem.x()][tem.y()][oppositeCameraOrientation.getOrientation()] = -1;
                     }
 
-                    if(!Main.isSimulating()) Main.getRpi().sendTakePhotoCommand();
+                    if(!Main.isSimulating()) sendTakePhotoCommand(position, orientation);
                     System.out.println("Take photo at position " + position + " ,orientation " + orientation);
                 }
             }
@@ -225,10 +243,32 @@ public class FindImageImproved {
                         candidateEdges[tem.x()][tem.y()][oppositeCameraOrientation.getOrientation()] = -1;
                 }
 
-                if(!Main.isSimulating()) Main.getRpi().sendTakePhotoCommand();
+                if(!Main.isSimulating()) sendTakePhotoCommand(position, orientation);
                 System.out.println("Take photo at position " + position + " ,orientation " + orientation);
             }
         }
+    }
+
+    public void sendTakePhotoCommand(Position position, Orientation orientation){
+        Orientation cameraOrientation = orientation.getLeftOrientation();
+        Position posM = position.add(cameraOrientation.getFrontPosition().mul(2));
+        Position posL = posM.add(cameraOrientation.getLeftPosition());
+        Position posR = posM.add(cameraOrientation.getRightPosition());
+        int dl = -1, dm = -1, dr = -1;
+
+        for(int dist = 1; dist <= 3; dist++){
+            if(!map.inBoundary(posM) || !map.inBoundary(posL) || !map.inBoundary(posR)) break;
+
+            if(dl == -1 && map.getWayPointState(posL) == WayPointState.isObstacle) dl = dist;
+            if(dm == -1 && map.getWayPointState(posM) == WayPointState.isObstacle) dm = dist;
+            if(dr == -1 && map.getWayPointState(posR) == WayPointState.isObstacle) dr = dist;
+
+            posM = posM.add(cameraOrientation.getFrontPosition());
+            posL = posL.add(cameraOrientation.getFrontPosition());
+            posR = posR.add(cameraOrientation.getFrontPosition());
+        }
+
+        Main.getRpi().sendTakePhotoCommand(position, cameraOrientation, dl, dm, dr);
     }
 
     public void solve(){
@@ -312,23 +352,21 @@ public class FindImageImproved {
                     robot.getOrientation(), next.getOrientation());
             robot.addBufferedActions(actions);
             robot.executeRemainingActions(executePeriod, true);
-
+            if(!Main.isSimulating()) sendTakePhotoCommand(next.getPosition(), next.getOrientation());
             totalLength+=actions.size();
-
-            if(!Main.isSimulating()) Main.getRpi().sendTakePhotoCommand();
         }
 
-        ArrayList<RobotAction> actions = FastestPath.solve(map, robot.getPosition(), map.getStart(),
-                robot.getOrientation(), new Orientation(0));
-        while(actions.size() > 0
-                && (actions.get(actions.size()-1) == RobotAction.TurnLeft ||
-                actions.get(actions.size()-1) == RobotAction.TurnRight)){
-            actions.remove(actions.size() - 1);
-        }
-        totalLength+=actions.size();
-
-        robot.addBufferedActions(actions);
-        robot.executeRemainingActions(executePeriod, false);
+//        ArrayList<RobotAction> actions = FastestPath.solve(map, robot.getPosition(), map.getStart(),
+//                robot.getOrientation(), new Orientation(0));
+//        while(actions.size() > 0
+//                && (actions.get(actions.size()-1) == RobotAction.TurnLeft ||
+//                actions.get(actions.size()-1) == RobotAction.TurnRight)){
+//            actions.remove(actions.size() - 1);
+//        }
+//        totalLength+=actions.size();
+//
+//        robot.addBufferedActions(actions);
+//        robot.executeRemainingActions(executePeriod, false);
         gui.updateGrid();
 
         System.out.println(totalLength);

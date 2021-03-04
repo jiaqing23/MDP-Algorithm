@@ -26,7 +26,7 @@ public class Position {
 
     @Override
     public String toString() {
-        return x + ", " + y ;
+        return y + ", " + x ;
     }
 
     public boolean equals(Position coord) {

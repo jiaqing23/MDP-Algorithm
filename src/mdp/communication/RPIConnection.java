@@ -5,6 +5,8 @@ import mdp.algorithm.Exploration;
 import mdp.robot.Robot;
 import mdp.robot.RobotAction;
 import mdp.simulation.MouseClickEvent;
+import mdp.utils.Orientation;
+import mdp.utils.Position;
 
 import javax.swing.*;
 import java.io.DataInputStream;
@@ -20,15 +22,15 @@ public class RPIConnection {
     private DataInputStream din;
     private DataOutputStream dout;
 
-    private boolean TESTING = true;
-    private String IPAddress = TESTING?"localhost":"192.168.20.20";
-    private int port = true?3333:8000;
+    private static volatile boolean photoFinishTaken = false;
+
+    private boolean FPCalibration = false;
 
     public RPIConnection(){
         try {
             System.out.println("Waiting for connection...");
-            socket = new Socket(IPAddress, port);
-            //socket.bind(new java.net.InetSocketAddress("192.168.20.20", 8080));
+            socket = new Socket("localhost", 3333);
+            //socket = new Socket("192.168.20.20", 8080);
             din= new DataInputStream(socket.getInputStream());
             dout= new DataOutputStream(socket.getOutputStream());
 
@@ -66,7 +68,11 @@ public class RPIConnection {
                             }
                             this.cancel();
                         } else {
-                            processReceive(s);
+                            String[] commands = s.split("#");
+                            for(String command: commands){
+                                System.out.println("Processing command: " + command);
+                                processReceive(command);
+                            }
                         }
                     }catch (Exception exception){
                         exception.printStackTrace();
@@ -91,6 +97,7 @@ public class RPIConnection {
 
     public void send(String s){
         try {
+            s += "#"; //Termination indicator for RPi
             System.out.println("Sent to RPI: " + s);
             dout.write(s.getBytes());
             dout.flush();
@@ -104,20 +111,38 @@ public class RPIConnection {
             case "F" -> Main.getGui().trigger(MouseClickEvent.MoveForward);
             case "L" -> Main.getGui().trigger(MouseClickEvent.TurnLeft);
             case "R" -> Main.getGui().trigger(MouseClickEvent.TurnRight);
-            case "E" -> Main.getGui().trigger(MouseClickEvent.RunExploration);
-            case "P" -> Main.getGui().trigger(MouseClickEvent.RunFastestPath);
-            case "A" -> Main.getGui().trigger(MouseClickEvent.RunFindImage);
+            case "EX" -> Main.getGui().trigger(MouseClickEvent.RunExploration);
+            //TODO: Add calibration command
+            case "FP1" -> {
+                FPCalibration = true;
+                Main.getGui().trigger(MouseClickEvent.RunFastestPath);
+                FPCalibration = false;
+            }
+            case "FP2" -> Main.getGui().trigger(MouseClickEvent.RunFastestPath);
+            case "FI" -> Main.getGui().trigger(MouseClickEvent.RunFindImage);
             case "S" -> Main.getGui().trigger(MouseClickEvent.Stop);
+            case "D" -> RPIConnection.photoFinishTaken = true;
             default -> {
                 if(s.length() == 6){
                     Exploration.setSensingDataFromRPI(s);
                     Robot.setActionCompleted(true);
+                }
+                else if(s.startsWith("waypoint")){
+                    String[] splited = s.split(",");
+                    try {
+                        Main.getGui().getMainFrame().getRightPanel().getConfPanel().getWaypointXTextField().setText(splited[1]);
+                        Main.getGui().getMainFrame().getRightPanel().getConfPanel().getWaypointYTextField().setText(splited[2]);
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
             }
         }
     }
 
     public void sendPathCommand(ArrayList<RobotAction> actions){
+        if(actions.size() == 0) return;
+
         String s = "";
         for(RobotAction action: actions){
             switch (action){
@@ -127,11 +152,11 @@ public class RPIConnection {
             }
         }
         int count = 0;
-        String s2 = "";
+        String s2 = "AL|AR|";
         for(int i = 0; i < s.length(); i++){
-            if(i == 0 || s.charAt(i)!=s.charAt(i-1)){
-                if(i!=0) s2 += (char)((int)'0' + count);
-                s2+=s.charAt(i);
+            if(i == 0 || s.charAt(i)!=s.charAt(i-1) || s.charAt(i-1) != 'W'){
+                if(i != 0) s2 += (char)((int)'0' + count);
+                s2 += s.charAt(i);
                 count = 0;
             }
             count++;
@@ -140,12 +165,32 @@ public class RPIConnection {
 
         System.out.println(s);
         System.out.println(s2);
-        send(s2);
+
+        if(FPCalibration) send("QQ" + s2);
+        else send(s2);
     }
 
-    //TODO
-    public void sendTakePhotoCommand(){
-        //WAIT RECEIVE
+    public void sendTakePhotoCommand(Position position, Orientation cameraOrientation, int dl, int dm, int dr){
+        String x = String.valueOf(position.x());
+        String y = String.valueOf(position.y());
+        String o = String.valueOf(cameraOrientation.getOrientation());
+        String dll = String.valueOf(dl);
+        String dmm = String.valueOf(dm);
+        String drr = String.valueOf(dr);
         System.out.println("Take Photo");
+        photoFinishTaken = false;
+        send("AL|RP|P,"+y+","+x+","+o+","+dll+","+dmm+","+drr);
+        while(!photoFinishTaken) { //Wait a while and check
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void sendMDFString(){
+        Main.getGui().getMap().updateMDF();
+        send("AL|AN|MDF,"+Main.getGui().getMap().getMdfString().getMDFHex1()+","+Main.getGui().getMap().getMdfString().getMDFHex2());
     }
 }

@@ -97,6 +97,13 @@ public class Exploration {
         else{
             for (int i = 1; i <= dist; i++) {
                 pos = pos.add(orientation.getFrontPosition());
+
+                //Handle sensor error
+                if(!map.inBoundary(pos) && i < dist) {
+                    System.out.println("Sensor error handled");
+                    break;
+                }
+
                 if(i < dist) map.getMap()[pos.x()][pos.y()].setState(WayPointState.isEmpty);
                 else if(map.inBoundary(pos)){
                     map.getMap()[pos.x()][pos.y()].setState(WayPointState.isObstacle);
@@ -240,6 +247,7 @@ public class Exploration {
 
         boolean reachGoal = false;
 
+        Main.getRpi().send("AL|AR|S1");
         sense();
         System.out.println("First Sense Done!");
         while(!reachGoal || !robot.getPosition().equals(map.getStart())){
@@ -283,6 +291,8 @@ public class Exploration {
         robot.addBufferedActions(actions);
         robot.executeRemainingActions(executePeriod, false);
         gui.updateGrid();
+
+        if(Main.isSimulating()) Main.getRpi().sendMDFString();
         System.out.println("Exploration Done!");
     }
 

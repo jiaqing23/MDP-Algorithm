@@ -3,7 +3,6 @@ package mdp.simulation;
 import mdp.Main;
 import mdp.algorithm.Exploration;
 import mdp.algorithm.FastestPath;
-import mdp.algorithm.FindImage;
 import mdp.algorithm.FindImageImproved;
 import mdp.map.WayPointSpecialState;
 import mdp.robot.Robot;
@@ -29,7 +28,7 @@ public class EventHandler {
     private Timer timerThread;
     private Thread explorationThread;
     private Exploration exploration;
-    private FindImage findImage;
+    private FindImageImproved findImageImproved;
 
     public EventHandler(GUI gui){
         this.gui = gui;
@@ -230,9 +229,9 @@ public class EventHandler {
             executePeriod = Integer.parseInt(gui.getMainFrame().getRightPanel().getConfPanel()
                                                             .getSimulationSpeedTextField().getText().trim());
             FPW = new Position(Integer.parseInt(gui.getMainFrame().getRightPanel().getConfPanel()
-                                .getWaypointXTextField().getText().trim()),
+                                .getWaypointYTextField().getText().trim()),
                                 Integer.parseInt(gui.getMainFrame().getRightPanel().getConfPanel()
-                                .getWaypointYTextField().getText().trim()));
+                                .getWaypointXTextField().getText().trim()));
             if(robot.checkValidPosition(FPW)) gui.getMap().setFPW(FPW);
             else{
                 System.out.println("FPW Invalid!");
@@ -243,32 +242,60 @@ public class EventHandler {
             return;
         }
 
+        ArrayList<RobotAction> bestActions1 = new ArrayList<RobotAction>();
+        ArrayList<RobotAction> bestActions2 = new ArrayList<RobotAction>();
+        int bestI = 0;
+
+        for(int i = 0; i < 4; i++){
+            ArrayList<RobotAction> actions = FastestPath.solve(gui.getMap(), robot.getPosition(), gui.getMap().getFPW(),
+                    robot.getOrientation(), new Orientation(i));
+            ArrayList<RobotAction> actions2 = FastestPath.solve(gui.getMap(), gui.getMap().getFPW(), gui.getMap().getGoal(),
+                    new Orientation(i), new Orientation(0));
+
+
+            while(actions.size() > 0 && actions2.size() > 0 &&
+                    ((actions.get(actions.size()-1) == RobotAction.TurnLeft && actions2.get(0) == RobotAction.TurnRight) ||
+                            (actions.get(actions.size()-1) == RobotAction.TurnRight && actions2.get(0) == RobotAction.TurnLeft))){
+                actions.remove(actions.size() - 1);
+                actions2.remove(0);
+            }
+            while(actions2.size() > 0
+                && (actions2.get(actions2.size()-1) == RobotAction.TurnLeft ||
+                actions2.get(actions2.size()-1) == RobotAction.TurnRight)){
+                actions2.remove(actions2.size() - 1);
+            }
+
+            if(i==0 || actions.size()+actions2.size()<bestActions1.size() + bestActions2.size()){
+                bestActions1 = actions;
+                bestActions2 = actions2;
+                bestI = i;
+            }
+        }
+
         for(int i = 0; i < gui.getMap().ROW; i++)
             for(int j = 0; j < gui.getMap().COL; j++)
                 gui.getMap().getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
 
-        ArrayList<RobotAction> actions = FastestPath.solve(gui.getMap(), robot.getPosition(), gui.getMap().getFPW(),
-                                                            robot.getOrientation(), new Orientation(0));
-        ArrayList<RobotAction> actions2 = FastestPath.solve(gui.getMap(), gui.getMap().getFPW(), gui.getMap().getGoal(),
-                                                            new Orientation(0), new Orientation(0));
+        FastestPath.solve(gui.getMap(), robot.getPosition(), gui.getMap().getFPW(),
+                robot.getOrientation(), new Orientation(bestI));
+        FastestPath.solve(gui.getMap(), gui.getMap().getFPW(), gui.getMap().getGoal(),
+                new Orientation(bestI), new Orientation(0));
 
-
-        while(actions.size() > 0 && actions2.size() > 0 &&
-                ((actions.get(actions.size()-1) == RobotAction.TurnLeft && actions2.get(0) == RobotAction.TurnRight) ||
-                 (actions.get(actions.size()-1) == RobotAction.TurnRight && actions2.get(0) == RobotAction.TurnLeft))){
-            actions.remove(actions.size() - 1);
-            actions2.remove(0);
-        }
-
-        robot.addBufferedActions(actions);
-        robot.addBufferedActions(actions2);
+        robot.addBufferedActions(bestActions1);
+        robot.addBufferedActions(bestActions2);
 
         gui.updateGrid();
 
         if(!Main.isSimulating()){
             robot.executeRemainingActions(executePeriod, false);
+
+            robot.setPosition(new Position(1,1));
+            robot.setOrientation(new Orientation(0));
+            robot.addBufferedActions(bestActions1);
+            robot.addBufferedActions(bestActions2);
+            gui.updateGrid();
         }
-        else{
+        //else{
             startTimer();
             fastestPathThread = new Timer();
             fastestPathThread.schedule(new TimerTask() {
@@ -283,7 +310,7 @@ public class EventHandler {
                     }
                 }
             }, executePeriod, executePeriod);
-        }
+        //}
 
     }
 
@@ -334,12 +361,10 @@ public class EventHandler {
         startTimer();
 
         exploration = new Exploration(gui, robot, gui.getMap(), executePeriod, 10000, 100);
-        FindImageImproved findImageImproved = new FindImageImproved(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
+        findImageImproved = new FindImageImproved(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
         explorationThread = new Thread(() -> {
             try {
-                //TODO: Add back
-                //exploration.solve();
-                //findImage.solve3();
+                //TODO: add back
                 exploration.solveForFindImage(findImageImproved);
                 findImageImproved.solve();
                 stopTimer();
@@ -351,5 +376,4 @@ public class EventHandler {
         });
         explorationThread.start();
     }
-
 }
