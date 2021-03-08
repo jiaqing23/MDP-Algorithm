@@ -91,6 +91,10 @@ public class Exploration {
         if(dist == 0) {
             for (int i = 1; i <= range; i++) {
                 pos = pos.add(orientation.getFrontPosition());
+                if(!map.inBoundary(pos)) {
+                    System.out.println("Sensor error handled");
+                    break;
+                }
                 map.getMap()[pos.x()][pos.y()].setState(WayPointState.isEmpty);
             }
         }
@@ -242,12 +246,13 @@ public class Exploration {
             }
         }
 
+
         gui.updateGrid();
         System.out.println("Exploration Start!");
 
         boolean reachGoal = false;
 
-        Main.getRpi().send("AL|AR|S1");
+        if(!Main.isSimulating()) Main.getRpi().send("AL|AR|S1");
         sense();
         System.out.println("First Sense Done!");
         while(!reachGoal || !robot.getPosition().equals(map.getStart())){
@@ -255,6 +260,7 @@ public class Exploration {
             if(robot.getPosition().equals(map.getGoal())) reachGoal = true;
 
             leftWallFollowing();
+            if(!Main.isSimulating()) Main.getRpi().sendMDFString();
 
             ArrayList<Position> unexplored = getUnexplored();
             if((100 - 100*unexplored.size()/(ROW*COL)) > coverageLimit) break;
@@ -275,9 +281,15 @@ public class Exploration {
             ArrayList<RobotAction> actions = FastestPath.solveExplorationFastestPath(map,
                                                                     robot.getPosition(), robot.getOrientation());
 
+            if(actions.size() == 0){
+                System.out.println("Remaining points unreachable");
+                break;
+            }
+
             for(RobotAction action: actions){
                 robot.addBufferedAction(action);
                 sense();
+                if(!Main.isSimulating()) Main.getRpi().sendMDFString();
             }
         }
 
@@ -292,7 +304,7 @@ public class Exploration {
         robot.executeRemainingActions(executePeriod, false);
         gui.updateGrid();
 
-        if(Main.isSimulating()) Main.getRpi().sendMDFString();
+        if(!Main.isSimulating()) Main.getRpi().sendMDFString();
         System.out.println("Exploration Done!");
     }
 
@@ -313,10 +325,11 @@ public class Exploration {
         }
 
         gui.updateGrid();
-        System.out.println("Exploration Start!");
+        System.out.println("Exploration for Find Image Start!");
 
         boolean reachGoal = false;
 
+        if(!Main.isSimulating()) Main.getRpi().send("AL|AR|S1");
         sense();
         System.out.println("First Sense Done!");
         while(!reachGoal || !robot.getPosition().equals(map.getStart())){
@@ -349,21 +362,16 @@ public class Exploration {
             ArrayList<RobotAction> actions = FastestPath.solveExplorationFastestPath(map,
                     robot.getPosition(), robot.getOrientation());
 
+            if(actions.size() == 0){
+                System.out.println("Remaining points unreachable");
+                break;
+            }
+
             for(RobotAction action: actions){
                 robot.addBufferedAction(action);
                 sense();
             }
         }
-
-//        ArrayList<RobotAction> actions = FastestPath.solve(map, robot.getPosition(), map.getStart(),
-//                robot.getOrientation(), new Orientation(0));
-//        while(actions.size() > 0
-//                && (actions.get(actions.size()-1) == RobotAction.TurnLeft ||
-//                actions.get(actions.size()-1) == RobotAction.TurnRight)){
-//            actions.remove(actions.size() - 1);
-//        }
-//        robot.addBufferedActions(actions);
-//        robot.executeRemainingActions(executePeriod, false);
 
         gui.updateGrid();
         System.out.println("Exploration for Find Image Done!");

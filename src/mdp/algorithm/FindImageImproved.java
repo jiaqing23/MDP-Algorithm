@@ -96,7 +96,7 @@ public class FindImageImproved {
                     Position facingPosition = position.add(orientation.getFrontPosition());
 
                     if(map.inBoundary(facingPosition) && middleObstacle[position.x()][position.y()] == 1 &&
-                            map.getWayPointState(facingPosition) == WayPointState.isEmpty){
+                            map.getWayPointState(facingPosition) == WayPointState.isEmpty && candidateEdges[i][j][k] == 0){
                         candidateEdges[i][j][k] = 1;
                         //System.out.println(i + " " + j + " " + k);
                     }
@@ -223,8 +223,9 @@ public class FindImageImproved {
                         candidateEdges[tem.x()][tem.y()][oppositeCameraOrientation.getOrientation()] = -1;
                     }
 
-                    if(!Main.isSimulating()) sendTakePhotoCommand(position, orientation);
                     System.out.println("Take photo at position " + position + " ,orientation " + orientation);
+                    if(!Main.isSimulating()) sendTakePhotoCommand(position, orientation);
+
                 }
             }
         }
@@ -243,8 +244,9 @@ public class FindImageImproved {
                         candidateEdges[tem.x()][tem.y()][oppositeCameraOrientation.getOrientation()] = -1;
                 }
 
-                if(!Main.isSimulating()) sendTakePhotoCommand(position, orientation);
                 System.out.println("Take photo at position " + position + " ,orientation " + orientation);
+                if(!Main.isSimulating()) sendTakePhotoCommand(position, orientation);
+
             }
         }
     }
@@ -352,21 +354,11 @@ public class FindImageImproved {
                     robot.getOrientation(), next.getOrientation());
             robot.addBufferedActions(actions);
             robot.executeRemainingActions(executePeriod, true);
+
             if(!Main.isSimulating()) sendTakePhotoCommand(next.getPosition(), next.getOrientation());
             totalLength+=actions.size();
         }
 
-//        ArrayList<RobotAction> actions = FastestPath.solve(map, robot.getPosition(), map.getStart(),
-//                robot.getOrientation(), new Orientation(0));
-//        while(actions.size() > 0
-//                && (actions.get(actions.size()-1) == RobotAction.TurnLeft ||
-//                actions.get(actions.size()-1) == RobotAction.TurnRight)){
-//            actions.remove(actions.size() - 1);
-//        }
-//        totalLength+=actions.size();
-//
-//        robot.addBufferedActions(actions);
-//        robot.executeRemainingActions(executePeriod, false);
         gui.updateGrid();
 
         System.out.println(totalLength);

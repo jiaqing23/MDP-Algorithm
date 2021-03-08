@@ -29,8 +29,8 @@ public class RPIConnection {
     public RPIConnection(){
         try {
             System.out.println("Waiting for connection...");
-            socket = new Socket("localhost", 3333);
-            //socket = new Socket("192.168.20.20", 8080);
+            //socket = new Socket("localhost", 3333);
+            socket = new Socket("192.168.20.20", 8080);
             din= new DataInputStream(socket.getInputStream());
             dout= new DataOutputStream(socket.getOutputStream());
 
@@ -70,7 +70,7 @@ public class RPIConnection {
                         } else {
                             String[] commands = s.split("#");
                             for(String command: commands){
-                                System.out.println("Processing command: " + command);
+                                //System.out.println("Processing command: " + command);
                                 processReceive(command);
                             }
                         }
@@ -153,6 +153,7 @@ public class RPIConnection {
         }
         int count = 0;
         String s2 = "AL|AR|";
+        if(FPCalibration) s2 += "QQ";
         for(int i = 0; i < s.length(); i++){
             if(i == 0 || s.charAt(i)!=s.charAt(i-1) || s.charAt(i-1) != 'W'){
                 if(i != 0) s2 += (char)((int)'0' + count);
@@ -163,12 +164,12 @@ public class RPIConnection {
         }
         if(count > 0) s2 += (char)((int)'0' + count); //count = 0 means s = ""
 
-        System.out.println(s);
-        System.out.println(s2);
+//        System.out.println(s);
+//        System.out.println(s2);
 
-        if(FPCalibration) send("QQ" + s2);
-        else send(s2);
+        send(s2);
     }
+
 
     public void sendTakePhotoCommand(Position position, Orientation cameraOrientation, int dl, int dm, int dr){
         String x = String.valueOf(position.x());
