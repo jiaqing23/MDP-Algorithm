@@ -360,7 +360,7 @@ public class EventHandler {
 
         startTimer();
 
-        exploration = new Exploration(gui, robot, gui.getMap(), executePeriod, 10000, 100);
+        exploration = new Exploration(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
         findImageImproved = new FindImageImproved(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
         explorationThread = new Thread(() -> {
             try {

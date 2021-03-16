@@ -28,6 +28,12 @@ public class Exploration {
     private FindImageImproved findImage;
     private boolean findImageMode = false;
 
+    private int[][] confidentScore;
+    private static final int SHORT1_CONFIDENT = 4;
+    private static final int SHORT2_CONFIDENT = 3;
+    private static final int LONG_CONFIDENT = 1;
+
+
     private static volatile String sensingDataFromRPI;
 
     public Exploration(GUI gui, Robot robot, Map map, int executePeriod, int timeLimit, int coverageLimit){
@@ -38,6 +44,7 @@ public class Exploration {
         this.executePeriod = executePeriod;
         this.timeLimit = timeLimit;
         this.coverageLimit = coverageLimit;
+        this.confidentScore = new int[ROW][COL];
     }
 
     public Simulator getSimulator() {
@@ -83,19 +90,69 @@ public class Exploration {
         updateMap(robot.getBackPosition().add(ori.getLeftPosition()), ori.getLeftOrientation(), sensor.leftB, SHORT_RANGE);
         updateMap(robot.getHeadPosition().add(ori.getRightPosition()), ori.getRightOrientation(), sensor.rightF, LONG_RANGE);
 
+        //Robot visited position => high confident empty
+        for(int i = -1; i <= 1; i++){
+            for(int j = -1; j <= 1; j++){
+                confidentScore[pos.x()+i][pos.y()+j] = 100000;
+            }
+        }
+
         gui.updateGrid();
     }
 
-    private int updateMap(Position position, Orientation orientation, int dist, int range){
+    private void setStateByConfident(Position position, WayPointState detectedState, int confidentLevel){
+        WayPointState originalState = map.getMap()[position.x()][position.y()].getState();
+        if(originalState == WayPointState.isUnexplored){
+            confidentScore[position.x()][position.y()] += confidentLevel;
+            map.getMap()[position.x()][position.y()].setState(detectedState);
+            if(findImageMode){
+                if(detectedState == WayPointState.isObstacle) findImage.updateObstacle(position);
+                else findImage.removeObstacle(position);
+            }
+            return;
+        }
+
+        if(originalState != detectedState){
+            confidentScore[position.x()][position.y()] -= confidentLevel;
+            if(confidentScore[position.x()][position.y()] < 0){
+                confidentScore[position.x()][position.y()] = -confidentScore[position.x()][position.y()];
+                map.getMap()[position.x()][position.y()].setState(detectedState);
+                if(findImageMode){
+                    if(detectedState == WayPointState.isObstacle) findImage.updateObstacle(position);
+                    else findImage.removeObstacle(position);
+                }
+            }
+        }
+        else{
+            confidentScore[position.x()][position.y()] += confidentLevel;
+            if(findImageMode){
+                if(detectedState == WayPointState.isObstacle) findImage.updateObstacle(position);
+                else findImage.removeObstacle(position);
+            }
+        }
+
+    }
+
+    private int getConfidentLevel(int d, int range){
+        if(range == SHORT_RANGE){
+            if(d == 1) return SHORT1_CONFIDENT;
+            else return SHORT2_CONFIDENT;
+        }
+        else return LONG_CONFIDENT;
+    }
+
+    private void updateMap(Position position, Orientation orientation, int dist, int range){
+
         Position pos = new Position(position.x(), position.y());
         if(dist == 0) {
             for (int i = 1; i <= range; i++) {
                 pos = pos.add(orientation.getFrontPosition());
                 if(!map.inBoundary(pos)) {
                     System.out.println("Sensor error handled");
-                    break;
+                    return;
                 }
-                map.getMap()[pos.x()][pos.y()].setState(WayPointState.isEmpty);
+
+                setStateByConfident(pos, WayPointState.isEmpty, getConfidentLevel(i, range));
             }
         }
         else{
@@ -105,17 +162,15 @@ public class Exploration {
                 //Handle sensor error
                 if(!map.inBoundary(pos) && i < dist) {
                     System.out.println("Sensor error handled");
-                    break;
+                    return;
                 }
 
-                if(i < dist) map.getMap()[pos.x()][pos.y()].setState(WayPointState.isEmpty);
+                if(i < dist) setStateByConfident(pos, WayPointState.isEmpty, getConfidentLevel(i, range));
                 else if(map.inBoundary(pos)){
-                    map.getMap()[pos.x()][pos.y()].setState(WayPointState.isObstacle);
-                    if(findImageMode) findImage.updateObstacle(pos);
+                    setStateByConfident(pos, WayPointState.isObstacle, getConfidentLevel(i, range));
                 }
             }
         }
-        return 0;
     }
 
     public Walkable checkWalkable(Orientation orientation){
@@ -156,6 +211,37 @@ public class Exploration {
             return Walkable.No;
 
         return Walkable.Unknown;
+    }
+
+    public static boolean canSenseUnknown(Position position, Orientation orientation, Map map){
+        WayPointState state1, state2, state3;
+        Position posM = position.add(orientation.getFrontPosition().mul(2));
+        Position posL = posM.add(orientation.getLeftPosition());
+        Position posR = posM.add(orientation.getRightPosition());
+
+        if(map.inBoundary(posM) && map.inBoundary(posL) && map.inBoundary(posR)) {
+            state1 = map.getMap()[posM.x()][posM.y()].getState();
+            state2 = map.getMap()[posL.x()][posL.y()].getState();
+            state3 = map.getMap()[posR.x()][posR.y()].getState();
+
+            if(state1 == WayPointState.isUnexplored || state2 == WayPointState.isUnexplored
+                    || state3 == WayPointState.isUnexplored)
+                return true;
+        }
+
+        posM = position.add(orientation.getLeftPosition().mul(2));
+        posL = posM.add(orientation.getLeftOrientation().getLeftPosition());
+        posR = posM.add(orientation.getLeftOrientation().getRightPosition());
+
+        if(map.inBoundary(posL) && map.inBoundary(posR)) {
+            state2 = map.getMap()[posL.x()][posL.y()].getState();
+            state3 = map.getMap()[posR.x()][posR.y()].getState();
+
+            if(state2 == WayPointState.isUnexplored || state3 == WayPointState.isUnexplored)
+                return true;
+        }
+
+        return false;
     }
 
     public void leftWallFollowing(){

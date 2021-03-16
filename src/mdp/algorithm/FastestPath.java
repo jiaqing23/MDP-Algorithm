@@ -1,5 +1,6 @@
 package mdp.algorithm;
 
+import mdp.Main;
 import mdp.map.Map;
 import mdp.map.WayPoint;
 import mdp.map.WayPointSpecialState;
@@ -37,6 +38,8 @@ public class FastestPath {
                 }
             }
         }
+
+        if(!Main.isSimulating()) Main.getRpi().sendMDFString();
 
         //Construct States Transition
         for(int i = 0; i < ROW; i++) {
@@ -94,6 +97,8 @@ public class FastestPath {
                 }
             }
         }
+
+
         ArrayList<RobotAction> actions = new ArrayList<RobotAction>();
         State curr = states[endPosition.x()][endPosition.y()][endOrientation.getOrientation()];
         map.getMap()[curr.getPosition().x()][curr.getPosition().y()].setSpecialState(WayPointSpecialState.isFastestPath);
@@ -187,8 +192,8 @@ public class FastestPath {
         for(int i = 0; i < ROW; i++) {
             for(int j = 0; j < COL; j++){
                 for(int k = 0; k < 4; k++){
-                    if(Exploration.checkWalkable(states[i][j][k].getPosition(),
-                                                states[i][j][k].getOrientation(), map) == Walkable.Unknown){
+                    if(Exploration.canSenseUnknown(states[i][j][k].getPosition(),
+                            states[i][j][k].getOrientation(), map)){
                         if(dist[i][j][k] < nearestDistance){
                             nearestDistance = dist[i][j][k];
                             target = states[i][j][k];
@@ -198,7 +203,9 @@ public class FastestPath {
             }
         }
 
+        if(target == states[0][0][0]) return actions; //Empty
 
+        System.out.println("Next target pos = " + target.getPosition());
         State curr = target;
         map.getMap()[curr.getPosition().x()][curr.getPosition().y()].setSpecialState(WayPointSpecialState.isFastestPath);
         while(curr != states[startPosition.x()][startPosition.y()][startOrientation.getOrientation()]){

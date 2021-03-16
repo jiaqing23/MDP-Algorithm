@@ -6,7 +6,7 @@ public class Map {
 
     public static final int ROW = 20;
     public static final int COL = 15;
-    public static final Position GOAL = new Position(18, 13);
+    public static final Position GOAL = new Position(13, 7);
     public static final Position START = new Position(1, 1);
 
 
