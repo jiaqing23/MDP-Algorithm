@@ -368,6 +368,8 @@ public class EventHandler {
                 exploration.solveForFindImage(findImageImproved);
                 findImageImproved.solve();
                 stopTimer();
+                System.out.println("Send command E");
+                Main.getRpi().send("AL|RP|E#");
                 explorationThread.stop();
             } catch(Exception exception){
                 exception.printStackTrace();

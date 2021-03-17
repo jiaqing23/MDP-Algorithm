@@ -111,7 +111,7 @@ public class FastestPath {
         }
 
         Collections.reverse(actions);
-        System.out.println(actions);
+        //System.out.println(actions);
         //System.out.println(dist[endPosition.x()][endPosition.y()][endOrientation.getOrientation()]);
         return actions;
     }
