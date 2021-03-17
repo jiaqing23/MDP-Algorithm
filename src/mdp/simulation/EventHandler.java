@@ -3,6 +3,7 @@ package mdp.simulation;
 import mdp.Main;
 import mdp.algorithm.Exploration;
 import mdp.algorithm.FastestPath;
+import mdp.algorithm.FindImage;
 import mdp.algorithm.FindImageImproved;
 import mdp.map.WayPointSpecialState;
 import mdp.robot.Robot;
@@ -29,6 +30,8 @@ public class EventHandler {
     private Thread explorationThread;
     private Exploration exploration;
     private FindImageImproved findImageImproved;
+    private FindImage findImage;
+    private Timer checkTimesUpTimer;
 
     public EventHandler(GUI gui){
         this.gui = gui;
@@ -361,21 +364,56 @@ public class EventHandler {
         startTimer();
 
         exploration = new Exploration(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
-        findImageImproved = new FindImageImproved(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
+        findImage = new FindImage(gui, robot, gui.getMap(), executePeriod, timeLimit, coverageLimit);
+
         explorationThread = new Thread(() -> {
             try {
                 //TODO: add back
-                exploration.solveForFindImage(findImageImproved);
-                findImageImproved.solve();
+                exploration.solveForFindImage(findImage);
+                findImage.solve();
                 stopTimer();
-                System.out.println("Send command E");
-                Main.getRpi().send("AL|RP|E#");
+                System.out.println("Send command E to tell image server stop");
+                if(!Main.isSimulating()) Main.getRpi().send("AL|RP|E");
+                checkTimesUpTimer.cancel();
                 explorationThread.stop();
             } catch(Exception exception){
                 exception.printStackTrace();
                 return;
             }
         });
+
+        checkTimesUpTimer = new Timer();
+        checkTimesUpTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (checkTimeUp(timeLimit)){
+                    System.out.println("Times Up!");
+
+                    if(explorationThread != null) explorationThread.stop();
+                    if(!Main.isSimulating()) Main.getRpi().send("AL|RP|E");
+                    this.cancel();
+                    stopTimer();
+                }
+            }
+        }, 250, 250);
+
         explorationThread.start();
+
+    }
+
+
+    public boolean checkTimeUp(int timeLimit){
+        String s = gui.getMainFrame().getRightPanel().getTimerPanel().getTimerLabel().getText();
+        try{
+            String[] time = s.split(":");
+            int minute = Integer.parseInt(time[0]);
+            int second = Integer.parseInt(time[1]);
+
+            return (minute*60+second >= timeLimit);
+
+        }catch (Exception exception){
+            System.out.println(exception.getMessage());
+            return true;
+        }
     }
 }

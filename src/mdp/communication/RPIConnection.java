@@ -166,7 +166,6 @@ public class RPIConnection {
 
 //        System.out.println(s);
 //        System.out.println(s2);
-
         send(s2);
     }
 

@@ -381,6 +381,8 @@ public class FindImageImproved {
                     robot.getOrientation(), next.getOrientation());
             robot.addBufferedActions(actions);
             robot.executeRemainingActions(executePeriod, true);
+
+            //Wait robot really reach target point, then send take photo command
             for(int t = 0; t < getFinalCmdLen(actions)-1; t++){
                 robot.executeRemainingActions(executePeriod, true);
             }
@@ -389,8 +391,6 @@ public class FindImageImproved {
             System.out.println("Take photo at Position " + next.getPosition() + " Orientation " + next.getOrientation());
 
             totalLength+=actions.size();
-
-
 
         }
 

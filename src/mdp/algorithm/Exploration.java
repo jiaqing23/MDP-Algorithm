@@ -25,7 +25,7 @@ public class Exploration {
     private int executePeriod;
     private int timeLimit;
     private int coverageLimit;
-    private FindImageImproved findImage;
+    private FindImage findImage;
     private boolean findImageMode = false;
 
     private int[][] confidentScore;
@@ -394,7 +394,7 @@ public class Exploration {
         System.out.println("Exploration Done!");
     }
 
-    public void solveForFindImage(FindImageImproved findImage){
+    public void solveForFindImage(FindImage findImage){
         this.findImage = findImage;
         findImageMode = true;
 
@@ -435,6 +435,7 @@ public class Exploration {
         }
 
         System.out.println("First round exploration done.");
+        if(!Main.isSimulating()) Main.getRpi().sendMDFString();
         if(gui.getMainFrame().getRightPanel().getConfPanel().getTerminationCheckBox().isSelected()) return;
 
         //Explore Remaining Area
