@@ -391,7 +391,7 @@ public class FindImage {
         while(true){
             if(checkTimeUp()) break;
             System.out.println("It's time to have some random!!");
-            randomWalk();
+            if(randomWalk() == false) break;
         }
 
         gui.updateGrid();
@@ -402,7 +402,7 @@ public class FindImage {
     }
 
 
-    private void randomWalk() {
+    private boolean randomWalk() {
         Position position = robot.getPosition();
         Orientation orientation = robot.getOrientation();
 
@@ -421,6 +421,8 @@ public class FindImage {
             }
         }
 
+        if(candidateState.size() == 0) return false;
+
         int idx = (int)(Math.random() * candidateState.size());
         Position tarpos = candidateState.get(idx).getPosition();
         Orientation tarori = candidateState.get(idx).getOrientation();
@@ -437,7 +439,7 @@ public class FindImage {
         if(!Main.isSimulating()) sendTakePhotoCommand(tarpos, tarori);
         System.out.println("Take photo at Position " + tarpos + " Orientation " + tarori);
 
-
+        return true;
     }
 
     private int getFinalCmdLen(ArrayList<RobotAction> actions){

@@ -137,7 +137,7 @@ public class Robot {
         for(int i = -1; i <= 1; i++)
             for(int j = -1; j <= 1; j++)
                 if(!map.inBoundary(new Position(position.x()+i, position.y()+j)) ||
-                        map.getMap()[position.x()+i][position.y()+j].getState() == WayPointState.isObstacle)
+                        map.getMap()[position.x()+i][position.y()+j].getState() != WayPointState.isEmpty)
                     return false;
 
         return true;

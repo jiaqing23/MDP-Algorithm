@@ -33,6 +33,8 @@ public class Exploration {
     private static final int SHORT2_CONFIDENT = 3;
     private static final int LONG_CONFIDENT = 1;
 
+    Position lastPosition;
+    private int[][] loopChecker;
 
     private static volatile String sensingDataFromRPI;
 
@@ -45,6 +47,8 @@ public class Exploration {
         this.timeLimit = timeLimit;
         this.coverageLimit = coverageLimit;
         this.confidentScore = new int[ROW][COL];
+        this.loopChecker = new int[ROW][COL];
+        this.lastPosition = robot.getPosition();
     }
 
     public Simulator getSimulator() {
@@ -213,6 +217,54 @@ public class Exploration {
         return Walkable.Unknown;
     }
 
+
+    public void handleLoopDuringLeftWall(){
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                loopChecker[i][j] = 0;
+            }
+        }
+
+        Position target = new Position(1, 1);
+        for(int i = 1; i < ROW-1; i++) {
+            Position pos = new Position(i, 1);
+            if(robot.checkValidPosition(pos)){
+                ArrayList<RobotAction> actions = FastestPath.solve(map,
+                        robot.getPosition(), pos, robot.getOrientation(), new Orientation(0));
+                if(actions.size() > 0){
+                    target = pos;
+                }
+            }
+        }
+        for(int i = 0; i < ROW; i++)
+            for(int j = 0; j < COL; j++)
+                gui.getMap().getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
+        ArrayList<RobotAction> actions = FastestPath.solve(map,
+                robot.getPosition(), target, robot.getOrientation(), new Orientation(0));
+        for(RobotAction action: actions){
+            if(action == RobotAction.MoveForward && checkWalkable(robot.getOrientation()) !=Walkable.Yes)
+                break;
+            robot.addBufferedAction(action);
+            sense();
+            if(!Main.isSimulating()) Main.getRpi().sendMDFString();
+        }
+
+    }
+
+    public void checkLoopDuringLeftWall(){
+        if(robot.getPosition() != lastPosition){
+            loopChecker[robot.getPosition().x()][robot.getPosition().y()]++;
+            lastPosition = robot.getPosition();
+        }
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                if(loopChecker[i][j] >= 3){
+                    handleLoopDuringLeftWall();
+                }
+            }
+        }
+    }
+
     public static boolean canSenseUnknown(Position position, Orientation orientation, Map map){
         WayPointState state1, state2, state3;
         Position posM = position.add(orientation.getFrontPosition().mul(2));
@@ -249,7 +301,7 @@ public class Exploration {
         Position dpos = orientation.getFrontPosition();
         for(int i = -2; i <= 2; i++) {
             Position tem = pos.add(dpos.mul(i));
-            if (!map.inBoundary(tem) || map.getWayPointState(tem) == WayPointState.isEmpty){
+            if (!map.inBoundary(tem) || map.getWayPointState(tem) == WayPointState.isObstacle){
                 return false;
             }
         }
@@ -261,7 +313,7 @@ public class Exploration {
         Position dpos = orientation.getLeftPosition();
         for(int i = -2; i <= 2; i++) {
             Position tem = pos.add(dpos.mul(i));
-            if (!map.inBoundary(tem) || map.getWayPointState(tem) == WayPointState.isEmpty){
+            if (!map.inBoundary(tem) || map.getWayPointState(tem) == WayPointState.isObstacle){
                 return false;
             }
         }
@@ -274,7 +326,7 @@ public class Exploration {
         robot.addBufferedAction(RobotAction.TurnLeft);
         sense();
 
-        while(!isFrontEmpty(robot.getPosition(), robot.getOrientation())){
+        while(isFrontEmpty(robot.getPosition(), robot.getOrientation())){
             if(findImageMode)
                 findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.MoveForward);
             robot.addBufferedAction(RobotAction.MoveForward);
@@ -290,7 +342,10 @@ public class Exploration {
     public void leftWallFollowing(){
         if(isLeftEmptyDuringLeftWall(robot.getPosition(), robot.getOrientation())){
             handleLeftEmptyIssue();
+            System.out.println("Handle left wall empty issue!");
         }
+
+        checkLoopDuringLeftWall();
 
         Walkable leftWalkable = checkWalkable(robot.getOrientation().getLeftOrientation());
         if(leftWalkable == Walkable.Yes){
@@ -398,7 +453,7 @@ public class Exploration {
             if((100 - 100*unexplored.size()/(ROW*COL)) > coverageLimit) break;
             if(checkTimeUp()) break;
         }
-
+        if(!Main.isSimulating()) Main.getRpi().sendMDFString();
         System.out.println("First round exploration done.");
         if(gui.getMainFrame().getRightPanel().getConfPanel().getTerminationCheckBox().isSelected()) return;
 
@@ -419,6 +474,8 @@ public class Exploration {
             }
 
             for(RobotAction action: actions){
+                if(action == RobotAction.MoveForward && checkWalkable(robot.getOrientation()) !=Walkable.Yes)
+                    break;
                 robot.addBufferedAction(action);
                 sense();
                 if(!Main.isSimulating()) Main.getRpi().sendMDFString();
@@ -469,7 +526,7 @@ public class Exploration {
             if(robot.getPosition().equals(map.getGoal())) reachGoal = true;
 
             leftWallFollowing();
-
+            if(!Main.isSimulating()) Main.getRpi().sendMDFString();
             ArrayList<Position> unexplored = getUnexplored();
             if((100 - 100*unexplored.size()/(ROW*COL)) > coverageLimit) break;
             if(checkTimeUp()) break;
@@ -501,8 +558,11 @@ public class Exploration {
             }
 
             for(RobotAction action: actions){
+                if(action == RobotAction.MoveForward && checkWalkable(robot.getOrientation()) !=Walkable.Yes)
+                    break;
                 robot.addBufferedAction(action);
                 sense();
+                if(!Main.isSimulating()) Main.getRpi().sendMDFString();
             }
         }
 
