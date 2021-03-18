@@ -244,10 +244,56 @@ public class Exploration {
         return false;
     }
 
+    public boolean isLeftEmptyDuringLeftWall(Position position, Orientation orientation){
+        Position pos = position.add(orientation.getLeftPosition().mul(2));
+        Position dpos = orientation.getFrontPosition();
+        for(int i = -2; i <= 2; i++) {
+            Position tem = pos.add(dpos.mul(i));
+            if (!map.inBoundary(tem) || map.getWayPointState(tem) == WayPointState.isEmpty){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isFrontEmpty(Position position, Orientation orientation){
+        Position pos = position.add(orientation.getFrontPosition().mul(2));
+        Position dpos = orientation.getLeftPosition();
+        for(int i = -2; i <= 2; i++) {
+            Position tem = pos.add(dpos.mul(i));
+            if (!map.inBoundary(tem) || map.getWayPointState(tem) == WayPointState.isEmpty){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void handleLeftEmptyIssue(){
+        if(findImageMode)
+            findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.TurnLeft);
+        robot.addBufferedAction(RobotAction.TurnLeft);
+        sense();
+
+        while(!isFrontEmpty(robot.getPosition(), robot.getOrientation())){
+            if(findImageMode)
+                findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.MoveForward);
+            robot.addBufferedAction(RobotAction.MoveForward);
+            sense();
+        }
+
+        if(findImageMode)
+            findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.MoveForward);
+        robot.addBufferedAction(RobotAction.TurnRight);
+        sense();
+    }
+
     public void leftWallFollowing(){
+        if(isLeftEmptyDuringLeftWall(robot.getPosition(), robot.getOrientation())){
+            handleLeftEmptyIssue();
+        }
+
         Walkable leftWalkable = checkWalkable(robot.getOrientation().getLeftOrientation());
         if(leftWalkable == Walkable.Yes){
-
             if(findImageMode)
                 findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.TurnLeft);
             robot.addBufferedAction(RobotAction.TurnLeft);
