@@ -226,6 +226,7 @@ public class Exploration {
         }
 
         Position target = new Position(1, 1);
+        Orientation targetori = new Orientation(0);
         for(int i = 1; i < ROW-1; i++) {
             Position pos = new Position(i, 1);
             if(robot.checkValidPosition(pos)){
@@ -236,11 +237,24 @@ public class Exploration {
                 }
             }
         }
+        for(int i = ROW-2; i >= 1; i--) {
+            Position pos = new Position(i, COL-2);
+            System.out.println(pos);
+            if(robot.checkValidPosition(pos)){
+                ArrayList<RobotAction> actions = FastestPath.solve(map,
+                        robot.getPosition(), pos, robot.getOrientation(), new Orientation(2));
+                if(actions.size() > 0){
+                    target = pos;
+                    targetori = new Orientation(2);
+                }
+            }
+        }
+
         for(int i = 0; i < ROW; i++)
             for(int j = 0; j < COL; j++)
                 gui.getMap().getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
         ArrayList<RobotAction> actions = FastestPath.solve(map,
-                robot.getPosition(), target, robot.getOrientation(), new Orientation(0));
+                robot.getPosition(), target, robot.getOrientation(), targetori);
         for(RobotAction action: actions){
             if(action == RobotAction.MoveForward && checkWalkable(robot.getOrientation()) !=Walkable.Yes)
                 break;
@@ -299,7 +313,7 @@ public class Exploration {
     public boolean isLeftEmptyDuringLeftWall(Position position, Orientation orientation){
         Position pos = position.add(orientation.getLeftPosition().mul(2));
         Position dpos = orientation.getFrontPosition();
-        for(int i = -2; i <= 2; i++) {
+        for(int i = -2; i <= 1; i++) {
             Position tem = pos.add(dpos.mul(i));
             if (!map.inBoundary(tem) || map.getWayPointState(tem) == WayPointState.isObstacle){
                 return false;
@@ -311,7 +325,7 @@ public class Exploration {
     public boolean isFrontEmpty(Position position, Orientation orientation){
         Position pos = position.add(orientation.getFrontPosition().mul(2));
         Position dpos = orientation.getLeftPosition();
-        for(int i = -2; i <= 2; i++) {
+        for(int i = -1; i <= 2; i++) {
             Position tem = pos.add(dpos.mul(i));
             if (!map.inBoundary(tem) || map.getWayPointState(tem) == WayPointState.isObstacle){
                 return false;
@@ -321,6 +335,13 @@ public class Exploration {
     }
 
     public void handleLeftEmptyIssue(){
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                loopChecker[i][j] = 0;
+            }
+        }
+
+
         if(findImageMode)
             findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.TurnLeft);
         robot.addBufferedAction(RobotAction.TurnLeft);
@@ -500,13 +521,13 @@ public class Exploration {
     public void solveForFindImage(FindImage findImage){
         this.findImage = findImage;
         findImageMode = true;
-
-        for(int i = 0; i < ROW; i++){
-            for(int j = 0; j < COL; j++){
-                map.getMap()[i][j].setState(WayPointState.isUnexplored);
-                map.getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
-            }
-        }
+//
+//        for(int i = 0; i < ROW; i++){
+//            for(int j = 0; j < COL; j++){
+//                map.getMap()[i][j].setState(WayPointState.isUnexplored);
+//                map.getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
+//            }
+//        }
         for(int i = -1; i <= 1; i++){
             for(int j = -1; j <= 1; j++){
                 map.getMap()[map.getStart().x()+i][map.getStart().y()+j].setState(WayPointState.isEmpty);
