@@ -377,8 +377,11 @@ public class Exploration {
 
             if(isLeftFrontCorner()){
                System.out.println("Corner calibration!");
-               if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
-               sense();
+               if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z9");
+            }
+            else if(isLeftCanSpecialCalibrate()){
+                System.out.println("Left Special Calibration");
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z7");
             }
 
             if(findImageMode)
@@ -388,8 +391,11 @@ public class Exploration {
 
             if(isLeftFrontCorner()){
                 System.out.println("Corner calibration!");
-                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
-                sense();
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z9");
+            }
+            else if(isLeftCanSpecialCalibrate()){
+                System.out.println("Left Special Calibration");
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z7");
             }
         }
         else if(leftWalkable == Walkable.No){
@@ -401,8 +407,11 @@ public class Exploration {
 
             if(isLeftFrontCorner()){
                 System.out.println("Corner calibration!");
-                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
-                sense();
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z9");
+            }
+            else if(isLeftCanSpecialCalibrate()){
+                System.out.println("Left Special Calibration");
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z7");
             }
 
             Walkable frontWalkable = checkWalkable(robot.getOrientation());
@@ -414,8 +423,11 @@ public class Exploration {
 
                 if(isLeftFrontCorner()){
                     System.out.println("Corner calibration!");
-                    if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
-                    sense();
+                    if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z9");
+                }
+                else if(isLeftCanSpecialCalibrate()){
+                    System.out.println("Left Special Calibration");
+                    if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z7");
                 }
 
             }
@@ -437,8 +449,11 @@ public class Exploration {
 
             if(isLeftFrontCorner()){
                 System.out.println("Corner calibration!");
-                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
-                sense();
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z9");
+            }
+            else if(isLeftCanSpecialCalibrate()){
+                System.out.println("Left Special Calibration");
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z7");
             }
         }
         if(findImageMode)
@@ -448,8 +463,11 @@ public class Exploration {
 
         if(isLeftFrontCorner()){
             System.out.println("Corner calibration!");
-            if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
-            sense();
+            if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z9");
+        }
+        else if(isLeftCanSpecialCalibrate()){
+            System.out.println("Left Special Calibration");
+            if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z7");
         }
     }
 
@@ -493,6 +511,18 @@ public class Exploration {
                 (!map.inBoundary(posL) || map.getWayPointState(posL) == WayPointState.isObstacle)&&
                 (!map.inBoundary(posR) || map.getWayPointState(posR) == WayPointState.isObstacle)&&
                 (!map.inBoundary(posLM) || map.getWayPointState(posLM) == WayPointState.isObstacle)&&
+                (!map.inBoundary(posLL) || map.getWayPointState(posLL) == WayPointState.isObstacle)&&
+                (!map.inBoundary(posLR) || map.getWayPointState(posLR) == WayPointState.isObstacle));
+
+    }
+
+
+    public boolean isLeftCanSpecialCalibrate(){
+        Orientation leftOrientation = robot.getOrientation().getLeftOrientation();
+        Position posLM = robot.getPosition().add(leftOrientation.getFrontPosition().mul(2));
+        Position posLL = posLM.add(leftOrientation.getLeftPosition());
+        Position posLR = posLM.add(leftOrientation.getRightPosition());
+        return ((!map.inBoundary(posLM) || map.getWayPointState(posLM) == WayPointState.isObstacle)&&
                 (!map.inBoundary(posLL) || map.getWayPointState(posLL) == WayPointState.isObstacle)&&
                 (!map.inBoundary(posLR) || map.getWayPointState(posLR) == WayPointState.isObstacle));
 
