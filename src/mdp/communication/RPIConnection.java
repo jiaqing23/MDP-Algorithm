@@ -155,11 +155,11 @@ public class RPIConnection {
         String s2 = "AL|AR|";
         if(FPCalibration) s2 += "QQ";
         for(int i = 0; i < s.length(); i++){
-            if(i == 0 || s.charAt(i)!=s.charAt(i-1) || s.charAt(i-1) != 'W'){
+            //if(i == 0 || s.charAt(i)!=s.charAt(i-1) || s.charAt(i-1) != 'W'){
                 if(i != 0) s2 += (char)((int)'0' + count);
                 s2 += s.charAt(i);
                 count = 0;
-            }
+            //}
             count++;
         }
         if(count > 0) s2 += (char)((int)'0' + count); //count = 0 means s = ""

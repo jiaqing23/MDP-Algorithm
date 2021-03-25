@@ -374,10 +374,23 @@ public class Exploration {
                 findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.TurnLeft);
             robot.addBufferedAction(RobotAction.TurnLeft);
             sense();
+
+            if(isLeftFrontCorner()){
+               System.out.println("Corner calibration!");
+               if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
+               sense();
+            }
+
             if(findImageMode)
                 findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.MoveForward);
             robot.addBufferedAction(RobotAction.MoveForward);
             sense();
+
+            if(isLeftFrontCorner()){
+                System.out.println("Corner calibration!");
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
+                sense();
+            }
         }
         else if(leftWalkable == Walkable.No){
             turnRightTillEmpty();
@@ -385,12 +398,26 @@ public class Exploration {
         else if(leftWalkable == Walkable.Unknown){
             robot.addBufferedAction(RobotAction.TurnLeft);
             sense();
+
+            if(isLeftFrontCorner()){
+                System.out.println("Corner calibration!");
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
+                sense();
+            }
+
             Walkable frontWalkable = checkWalkable(robot.getOrientation());
             if(frontWalkable == Walkable.Yes){
                 if(findImageMode)
                     findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.MoveForward);
                 robot.addBufferedAction(RobotAction.MoveForward);
                 sense();
+
+                if(isLeftFrontCorner()){
+                    System.out.println("Corner calibration!");
+                    if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
+                    sense();
+                }
+
             }
             else if(frontWalkable == Walkable.No){
                 turnRightTillEmpty();
@@ -407,11 +434,23 @@ public class Exploration {
                 findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.TurnRight);
             robot.addBufferedAction(RobotAction.TurnRight);
             sense();
+
+            if(isLeftFrontCorner()){
+                System.out.println("Corner calibration!");
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
+                sense();
+            }
         }
         if(findImageMode)
             findImage.checkNeedToTakePhotoDuringLeftWall(robot.getPosition(), robot.getOrientation(), RobotAction.MoveForward);
         robot.addBufferedAction(RobotAction.MoveForward);
         sense();
+
+        if(isLeftFrontCorner()){
+            System.out.println("Corner calibration!");
+            if(!Main.isSimulating()) Main.getRpi().send("AL|AR|C4");
+            sense();
+        }
     }
 
     public ArrayList<Position> getUnexplored(){
@@ -441,6 +480,24 @@ public class Exploration {
         }
     }
 
+    public boolean isLeftFrontCorner(){
+        Orientation orientation = robot.getOrientation();
+        Orientation leftOrientation = orientation.getLeftOrientation();
+        Position posM = robot.getPosition().add(orientation.getFrontPosition().mul(2));
+        Position posL = posM.add(orientation.getLeftPosition());
+        Position posR = posM.add(orientation.getRightPosition());
+        Position posLM = robot.getPosition().add(leftOrientation.getFrontPosition().mul(2));
+        Position posLL = posLM.add(leftOrientation.getLeftPosition());
+        Position posLR = posLM.add(leftOrientation.getRightPosition());
+        return ((!map.inBoundary(posM) || map.getWayPointState(posM) == WayPointState.isObstacle)&&
+                (!map.inBoundary(posL) || map.getWayPointState(posL) == WayPointState.isObstacle)&&
+                (!map.inBoundary(posR) || map.getWayPointState(posR) == WayPointState.isObstacle)&&
+                (!map.inBoundary(posLM) || map.getWayPointState(posLM) == WayPointState.isObstacle)&&
+                (!map.inBoundary(posLL) || map.getWayPointState(posLL) == WayPointState.isObstacle)&&
+                (!map.inBoundary(posLR) || map.getWayPointState(posLR) == WayPointState.isObstacle));
+
+    }
+
     public void solve(){
         for(int i = 0; i < ROW; i++){
             for(int j = 0; j < COL; j++){
@@ -451,8 +508,12 @@ public class Exploration {
         for(int i = -1; i <= 1; i++){
             for(int j = -1; j <= 1; j++){
                 map.getMap()[map.getStart().x()+i][map.getStart().y()+j].setState(WayPointState.isEmpty);
+                map.getMap()[map.getGoal().x()+i][map.getGoal().y()+j].setState(WayPointState.isEmpty);
+                confidentScore[map.getStart().x()+i][map.getStart().y()+j] = 100000;
+                confidentScore[map.getGoal().x()+i][map.getGoal().y()+j] = 100000;
             }
         }
+
 
 
         gui.updateGrid();
@@ -521,16 +582,19 @@ public class Exploration {
     public void solveForFindImage(FindImage findImage){
         this.findImage = findImage;
         findImageMode = true;
-//
-//        for(int i = 0; i < ROW; i++){
-//            for(int j = 0; j < COL; j++){
-//                map.getMap()[i][j].setState(WayPointState.isUnexplored);
-//                map.getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
-//            }
-//        }
+
+        for(int i = 0; i < ROW; i++){
+            for(int j = 0; j < COL; j++){
+                map.getMap()[i][j].setState(WayPointState.isUnexplored);
+                map.getMap()[i][j].setSpecialState(WayPointSpecialState.normal);
+            }
+        }
         for(int i = -1; i <= 1; i++){
             for(int j = -1; j <= 1; j++){
                 map.getMap()[map.getStart().x()+i][map.getStart().y()+j].setState(WayPointState.isEmpty);
+                map.getMap()[map.getGoal().x()+i][map.getGoal().y()+j].setState(WayPointState.isEmpty);
+                confidentScore[map.getStart().x()+i][map.getStart().y()+j] = 100000;
+                confidentScore[map.getGoal().x()+i][map.getGoal().y()+j] = 100000;
             }
         }
 

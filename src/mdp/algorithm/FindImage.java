@@ -377,7 +377,7 @@ public class FindImage {
             robot.executeRemainingActions(executePeriod, true);
 
             //Wait robot really reach target point, then send take photo command
-            for(int t = 0; t < getFinalCmdLen(actions)-1; t++){
+            for(int t = 0; t < actions.size()-1; t++){
                 robot.executeRemainingActions(executePeriod, true);
             }
 
@@ -432,7 +432,7 @@ public class FindImage {
         robot.executeRemainingActions(executePeriod, true);
 
         //Wait robot really reach target point, then send take photo command
-        for(int t = 0; t < getFinalCmdLen(actions)-1; t++){
+        for(int t = 0; t < actions.size()-1; t++){
             robot.executeRemainingActions(executePeriod, true);
         }
 
@@ -442,15 +442,4 @@ public class FindImage {
         return true;
     }
 
-    private int getFinalCmdLen(ArrayList<RobotAction> actions){
-        if(actions.isEmpty()) return 0;
-
-        int res = actions.size();
-        for(int i  = 1; i < actions.size(); i++){
-            if(actions.get(i) == RobotAction.MoveForward && actions.get(i) == actions.get(i-1)){
-                res--;
-            }
-        }
-        return res;
-    }
 }
