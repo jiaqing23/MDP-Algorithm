@@ -590,6 +590,16 @@ public class Exploration {
                     break;
                 robot.addBufferedAction(action);
                 sense();
+
+                if(isLeftFrontCorner()){
+                    System.out.println("Corner calibration!");
+                    if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z9");
+                }
+                else if(isLeftCanSpecialCalibrate()){
+                    System.out.println("Left Special Calibration");
+                    if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z7");
+                }
+
                 if(!Main.isSimulating()) Main.getRpi().sendMDFString();
             }
         }
@@ -601,9 +611,26 @@ public class Exploration {
                     actions.get(actions.size()-1) == RobotAction.TurnRight)){
             actions.remove(actions.size() - 1);
         }
-        robot.addBufferedActions(actions);
-        robot.executeRemainingActions(executePeriod, false);
-        gui.updateGrid();
+
+        for(RobotAction action: actions){
+            robot.addBufferedAction(action);
+            sense();
+
+            if(isLeftFrontCorner()){
+                System.out.println("Corner calibration!");
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z9");
+            }
+            else if(isLeftCanSpecialCalibrate()){
+                System.out.println("Left Special Calibration");
+                if(!Main.isSimulating()) Main.getRpi().send("AL|AR|Z7");
+            }
+
+            if(!Main.isSimulating()) Main.getRpi().sendMDFString();
+        }
+//
+//        robot.addBufferedActions(actions);
+//        robot.executeRemainingActions(executePeriod, false);
+//        gui.updateGrid();
 
         if(!Main.isSimulating()) Main.getRpi().sendMDFString();
         System.out.println("Exploration Done!");
